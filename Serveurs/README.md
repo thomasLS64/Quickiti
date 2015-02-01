@@ -1,8 +1,8 @@
 # Serveurs
 Ce dossier contient les différents fichiers des serveurs de Quickiti.
 * [Serveur central](#serveur-central) (central.js)
-* [Serveur de gestion de la base de donnée](#serveur-de-gestion-de-la-base-de-donnée) (gestionBD.js)
-* [Serveur de récupération de donnée](#serveur-de-récupération-de-donnée) (recup.js)
+* [Serveur de gestion de la base de donnée](#serveur-de-gestion-de-la-BD) (gestionBD.js)
+* [Serveur de récupération de donnée](#serveur-de-recuperation-de-donnee) (recup.js)
 * [Serveur application cliente : web](#serveur-application-cliente--web) (application_web.js)
 
 Pour fonctionner Quickiti a fait le choix d'utiliser :
@@ -13,7 +13,7 @@ La communication entre serveurs se fait par socket grâce au module *Socket.IO* 
 
 ## Serveur central
 
-## Serveur de gestion de la base de donnée
+## Serveur de gestion de la BD
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
 ### Création d'une compagnie de transport en BD
@@ -47,6 +47,6 @@ socket.emit('selectAgency', query, callback);
 
 Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
 
-## Serveur de récupération de donnée
+## Serveur de recuperation de donnee
 
 ## Serveur application cliente : web
