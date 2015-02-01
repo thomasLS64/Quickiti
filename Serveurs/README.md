@@ -42,3 +42,5 @@ socket.emit('selectAgency', query, callback);
 ```
 `query` est basé sur le même modèle que `data`
 `callback` est une fonction exécutée lorsque la sélection est terminée
+
+Voir des exemples dans le Fichier [../Test/gestionBD.js](../Test/gestionBD.js)
