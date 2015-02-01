@@ -15,5 +15,8 @@ La communication entre serveurs se fait par socket grâce au module *Socket.IO* 
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
 ### createAgency : Création d'une compagnie de transport en BD
+``` js
+socket.emit('createAgency', data);
+```
 ### updateAgency : Mise à jour d'une compagnie de transport en BD
 ### selectAgency : Sélection de compagnie de transport en BD
