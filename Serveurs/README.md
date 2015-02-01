@@ -1,8 +1,8 @@
 # Serveurs
 Ce dossier contient les différents fichiers des serveurs de Quickiti.
+* Serveur central (central.js)
 * Serveur de gestion de la base de donnée (gestionBD.js)
 * Serveur de récupération de donnée (recup.js)
-* Serveur central (central.js)
 * Serveur application cliente : web (application_web.js)
 
 Pour fonctionner Quickiti a fait le choix d'utiliser :
@@ -11,10 +11,12 @@ Pour fonctionner Quickiti a fait le choix d'utiliser :
 
 La communication entre serveurs se fait par socket grâce au module *Socket.IO* de *Node.JS* 
 
+## Serveur central
+
 ## Serveur de gestion de la base de donnée
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
-### createAgency : Création d'une compagnie de transport en BD
+### Création d'une compagnie de transport en BD
 ``` js
 socket.emit('createAgency', data);
 ```
@@ -31,16 +33,20 @@ var data = {
     agency_lang : "..."
 };
 ```
-### updateAgency : Mise à jour d'une compagnie de transport en BD
+### Mise à jour d'une compagnie de transport en BD
 ``` js
 socket.emit('updateAgency', query, update);
 ```
 `query` et `update` sont basés sur le même modèle que `data`
-### selectAgency : Sélection de compagnie de transport en BD
+### Sélection de compagnie de transport en BD
 ``` js
 socket.emit('selectAgency', query, callback);
 ```
 `query` est basé sur le même modèle que `data`
 `callback` est une fonction exécutée lorsque la sélection est terminée
 
-Voir des exemples dans le Fichier [../Test/gestionBD.js](../Test/gestionBD.js)
+Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
+
+## Serveur de récupération de donnée
+
+## Serveur application cliente : web
