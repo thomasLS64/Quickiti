@@ -12,6 +12,7 @@ Pour fonctionner Quickiti a fait le choix d'utiliser :
 La communication entre serveurs se fait par socket grâce au module *Socket.IO* de *Node.JS* 
 
 ## Serveur central
+Ce serveur est dédié à l'interaction entre les différentes applications clientes et les serveurs du projet.
 
 ## Serveur de gestion de la BD
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
@@ -48,5 +49,7 @@ socket.emit('selectAgency', query, callback);
 Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
 
 ## Serveur de recuperation de donnee
+Ce serveur est dédié à la récupération des données des différentes compagnies de transport.
 
 ## Serveur application cliente : web
+Ce serveur est dédié à l'application cliente web.
