@@ -17,6 +17,7 @@ Ce serveur est dédié à l'interaction entre les différentes applications clie
 ## Serveur de gestion de la BD
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
+### Compagnie de transport
 ``` js
 var data = {
     email : "...",
@@ -30,19 +31,19 @@ var data = {
 };
 ```
 
-### Création d'une compagnie de transport en BD
+#### Création
 ``` js
 socket.emit('createAgency', data);
 ```
 * `data` représente toutes les données nécessaires à Quickiti pour définir une compagnie
 
-### Mise à jour d'une compagnie de transport en BD
+#### Mise à jour
 ``` js
 socket.emit('updateAgency', query, update);
 ```
 * `query` et `update` sont basés sur le même modèle que `data`
 
-### Sélection de compagnie de transport en BD
+#### Sélection
 ``` js
 socket.emit('selectAgency', query, callback);
 ```
