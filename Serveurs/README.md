@@ -15,8 +15,22 @@ La communication entre serveurs se fait par socket grâce au module *Socket.IO* 
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
 ### createAgency : Création d'une compagnie de transport en BD
+Appel :
 ``` js
 socket.emit('createAgency', data);
+```
+`data` représente toute les données nécessaires à Quickiti pour définir une compagnie
+``` js
+var data = {
+    email : "...",
+    password : "...",
+    agency_id : "...",
+    agency_name : "...",
+    agency_url : "...",
+    agency_timezone : "...",
+    agency_phone : "...",
+    agency_lang : "..."
+};
 ```
 ### updateAgency : Mise à jour d'une compagnie de transport en BD
 ### selectAgency : Sélection de compagnie de transport en BD
