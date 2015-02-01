@@ -1,4 +1,4 @@
-# Serveur
+# Serveurs
 Ce dossier contient les différents fichiers des serveurs de Quickiti.
 * Serveur de gestion de la base de donnée (gestionBD.js)
 * Serveur de récupération de donnée (recup.js)
