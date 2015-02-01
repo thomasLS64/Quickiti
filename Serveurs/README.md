@@ -1,7 +1,7 @@
 # Serveurs
 Ce dossier contient les différents fichiers des serveurs de Quickiti.
 * [Serveur central](#serveur-central) (central.js)
-* [Serveur de gestion de la base de donnée](#serveur-de-gestion-de-la-BD) (gestionBD.js)
+* [Serveur de gestion de la base de donnée](#serveur-de-gestion-de-la-bd) (gestionBD.js)
 * [Serveur de récupération de donnée](#serveur-de-recuperation-de-donnee) (recup.js)
 * [Serveur application cliente : web](#serveur-application-cliente--web) (application_web.js)
 
