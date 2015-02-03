@@ -40,7 +40,7 @@ io.sockets.on('connection', function (socketWeb) { // socket pour avoir une inst
                         reponseFinal += ligne; // + quoi ?
                     } 
                     else{
-                        var compagnie = socketRecuperationDonnees.emit('compagnieLigne',);
+                        var compagnie = socketSGBD.emit('compagnieLigne',);
                         if (compagnie) {
                             reponseFinal += ligne + caracteristiques; // "caracteristiques" sort d'où ?
                         };
@@ -67,7 +67,7 @@ io.sockets.on('connection', function (socketWeb) { // socket pour avoir une inst
                         reponseFinal += ligne; // + quoi ?
                     } 
                     else{
-                        var compagnie = socketRecuperationDonnees.emit('compagnieLigne',);
+                        var compagnie = socketSGBD.emit('compagnieLigne',);
                         if (compagnie) {
                             reponseFinal += ligne + caracteristiques; // "caracteristiques" sort d'où ?
                         };
