@@ -97,7 +97,7 @@ io.on('connection', function(socket) {
 	**			agency_lang : "..."
 	**		});
 	*/
-	socket.on('createAgency', function(d) {
+	socket.on('createAgency', function(d, callback) {
 		// Initialisation de la nouvelle compagnie
 		var newAgency = new compagnieModel();
 
@@ -107,16 +107,20 @@ io.on('connection', function(socket) {
 		newAgency.agency_url = d.agency_url;
 		newAgency.agency_timezone = d.agency_timezone;
 		newAgency.agency_phone = d.agency_timezone;
-		newAgency.angency_lang = d.angency_lang;
+		newAgency.agency_lang = d.agency_lang;
 		newAgency.email = d.email;
 		newAgency.password = d.password;
 
 		// Insertion en base de données
 		newAgency.save(function(err) {
-			if(err)
+			if(err) {
 				console.log('Database Agency creation : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Agency creation : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -146,12 +150,16 @@ io.on('connection', function(socket) {
 	**
 	**		socket.emit('updateAgency', query, update);
 	*/
-	socket.on('updateAgency', function(query, update) {
+	socket.on('updateAgency', function(query, update, callback) {
 		compagnieModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err)
+			if(err) {
 				console.log('Database Agency update : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Agency update : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -200,7 +208,7 @@ io.on('connection', function(socket) {
 	**			compagnieId : "..."
 	**		});
 	*/
-	socket.on('createAgency', function(d) {
+	socket.on('createLine', function(d) {
 		// Initialisation de la nouvelle ligne
 		var newLine = new ligneModel();
 
