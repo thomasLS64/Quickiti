@@ -9,8 +9,8 @@ clientGestBD.on('connect', function(){ console.info("Connecté au serveur de la 
 clientGestBD.on('event', function(data){ console.log(data); });
 clientGestBD.on('disconnect', function(){ console.error("Déconnecté du serveur de la base de donnée.".red); clientGestBD.connecte = false; });
 clientGestBD.on('reconnecting', function(n) { console.info("Reconnexion en cours (" + n + ") ...".orange);});
-clientGestBD.on('reconnect_error', function(n) { console.error("Reconnexion échouée".red);});
-clientGestBD.on('reconnect_failed', function(n) { console.error("Reconnexion impossible.".red); });
+clientGestBD.on('reconnect_error', function() { console.error("Reconnexion échouée".red);});
+clientGestBD.on('reconnect_failed', function() { console.error("Reconnexion impossible.".red); });
 
 
 
@@ -31,10 +31,10 @@ var GTFSFiles = [	'agency'
 
 io.on('connection', function (socket) {
 	console.log(colors.cyan("Un client est connecté" + socket.client));
-    socket.on('requestGTFS', function(url) {
-        var nomFichierGTFS = downloadGTFS(url,, socket);
-        socket.emmit(GTFS2JSON(nomFichierGTFS));
-
+    socket.on('subscribeAgencies', function (Agencie) {
+    	console.log("------------------------------".bold);
+    	console.log("Demande d'inscription de l'agence" + Agencie.name);
+    	console.log("------------------------------".bold);
     });
     socket.on("requestPerimeter", function (point, perimeter) {
     	console.log("------------------------------".bold);
