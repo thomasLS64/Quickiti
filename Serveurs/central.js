@@ -14,9 +14,24 @@ Car c'est au client de se connecter
 */
 
 
-// Quand un client se connecte, ici le serveur web
-io.sockets.on('connection', function (socketWeb) { // socket pour avoir une instance différente..utile?
-    socket.on('demanderClient', function(typeDemande, demande, perimetre){
+// Quand un client se connecte, ici le serveur site client et pour le site pour les compagnies 
+io.sockets.on('connection', function (socket) { // socket pour avoir une instance différente..utile?
+    /* lorsque la fonction "clientRequest" est appelé depuis le site client
+    ** 
+    ** description des paramètre de la fonction:
+    ** socket.on('clientRequest', function (typeRequest, request, perimeter){ ..}
+    ** 
+    ** var typeRequest = 'route' or 'stopsNearTo';
+    ** var request = { coordOne = {
+    **                      latitude : "...",
+    **                      longitude : "..."},
+    **                 coordSecond = {...};
+    **               };
+    ** var perimeter = 15; l'unité est 
+    ** 
+    */
+    socket.on('clientRequest', function (typeRequest, request, perimeter){ 
+
         // Initialisation de la réponse
         var reponseFinal = false;
 
@@ -26,7 +41,7 @@ io.sockets.on('connection', function (socketWeb) { // socket pour avoir une inst
             var ligne;
 
             // demande la liste des lignes au Serveur de récupération de données
-            var itineraire = socketRecuperationDonnees.emit('recuperationItineraire', demande, perimetre, function(etat, lignes){
+            var itineraire = socketRecuperationDonnees.emit('searchRoute', demande, perimeter, function(etat, lignes){
                 if(etat){
                     // Parcours des différentes lignes reçu
                     for (var i = 0; i < lignes.length; i++) {
@@ -61,7 +76,7 @@ io.sockets.on('connection', function (socketWeb) { // socket pour avoir une inst
             var ligne;
 
             // demande la liste des lignes au Serveur de récupération de données
-            var lignes = socketRecuperationDonnees.emit('recuperationArret', demande, perimetre, function(lignes));
+            var lignes = socketRecuperationDonnees.emit('recuperationArret', demande, perimeter, function(lignes));
             
             // Parcours des différentes lignes reçu
             for (var i = 0; i < lignes.length; i++) {
@@ -90,9 +105,9 @@ io.sockets.on('connection', function (socketWeb) { // socket pour avoir une inst
                     });
                     
                 }
-            };
-        };
-    })
+            }
+        }
+    });
 
     
 });
