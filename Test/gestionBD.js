@@ -46,12 +46,37 @@ serveurGestionBD.emit('createAgency', {
 						serveurGestionBD.emit('selectAgencies', {
 							"agency_lang" : "fr"
 						}, function(err, d) {
-							console.log(d);
+							// Création d'un arret
+							console.log('Création d\'un arret');
+							serveurGestionBD.emit('createStop', {
+								stop_id : "F54",
+								stop_name : "Arret de la Barre",
+								stop_desc : "Plage de la Barre",
+								location_type : 1,
+								stop_lon : 40.32458464,
+								stop_lat : 24.21574,
+								compagnieId : d[0]["_id"]
+							}, function(etat) {
+								if(!etat)
+									console.log('[ERREUR] Impossible de créer l\'arret');
+								else {
+									// Recherche des arrets
+									console.log('Recherche des arrets');
+									serveurGestionBD.emit('searchStopsNearTo', {
+										latitude : 40.32458427,
+										longitude : 24.21574
+									}, 25, function(err, d) {
+										if(!err)
+											console.log(d);
+										else
+											console.log(err);
+									});
+								}
+							});
 						});
 					}
 				});
 			}
 		});
 	}
-
 });
