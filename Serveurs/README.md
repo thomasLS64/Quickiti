@@ -18,8 +18,8 @@ Ce serveur est dédié à l'interaction entre les différentes applications clie
 ## Serveur de gestion de la BD
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
-
-### Compagnie de transport
+### Appels basiques
+#### Compagnie de transport
 ``` js
 var data = {
     email : "...",
@@ -33,26 +33,26 @@ var data = {
 };
 ```
 
-#### Création
+##### Création
 ``` js
 socket.emit('createAgency', data);
 ```
 * `data` représente toutes les données nécessaires à Quickiti pour définir une compagnie
 
-#### Mise à jour
+##### Mise à jour
 ``` js
 socket.emit('updateAgency', query, update);
 ```
 * `query` et `update` sont basés sur le même modèle que `data`
 
-#### Sélection
+##### Sélection
 ``` js
 socket.emit('selectAgencies', query, callback);
 ```
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
-### Ligne
+#### Ligne
 ``` js
 var data = {
     route_id : "...",
@@ -67,19 +67,19 @@ var data = {
 };
 ```
 
-#### Création
+##### Création
 ``` js
 socket.emit('createLine', data);
 ```
 * `data` représente toutes les données nécessaires à Quickiti pour définir un arrêt
 
-#### Mise à jour
+##### Mise à jour
 ``` js
 socket.emit('updateLine', query, update);
 ```
 * `query` et `update` sont basés sur le même modèle que `data`
 
-#### Sélection
+##### Sélection
 ``` js
 socket.emit('selectLines', query, callback);
 ```
@@ -87,7 +87,7 @@ socket.emit('selectLines', query, callback);
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
 
-### Arrêt
+#### Arrêt
 ``` js
 var data = {
     stop_id : "...",
@@ -101,19 +101,19 @@ var data = {
 };
 ```
 
-#### Création
+##### Création
 ``` js
 socket.emit('createStop', data);
 ```
 * `data` représente toutes les données nécessaires à Quickiti pour définir un arrêt
 
-#### Mise à jour
+##### Mise à jour
 ``` js
 socket.emit('updateStop', query, update);
 ```
 * `query` et `update` sont basés sur le même modèle que `data`
 
-#### Sélection
+##### Sélection
 ``` js
 socket.emit('selectStops', query, callback);
 ```
@@ -121,7 +121,7 @@ socket.emit('selectStops', query, callback);
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
 
-### Lien entre Arret et Ligne
+#### Lien entre Arret et Ligne
 ``` js
 var data = {
     arretId : "...",
@@ -129,26 +129,26 @@ var data = {
 };
 ```
 
-#### Création
+##### Création
 ``` js
 socket.emit('createStopLine', data);
 ```
 * `data` représente toutes les données nécessaires à Quickiti pour définir un arrêt
 
-#### Mise à jour
+##### Mise à jour
 ``` js
 socket.emit('updateStopLine', query, update);
 ```
 * `query` et `update` sont basés sur le même modèle que `data`
 
-#### Sélection
+##### Sélection
 ``` js
 socket.emit('selectStopsLines', query, callback);
 ```
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
-### Véhicule
+#### Véhicule
 ``` js
 var data = {
     longitude = "...",
@@ -158,24 +158,43 @@ var data = {
 };
 ```
 
-#### Création
+##### Création
 ``` js
 socket.emit('createVehicle', data);
 ```
 * `data` représente toutes les données nécessaires à Quickiti pour définir un arrêt
 
-#### Mise à jour
+##### Mise à jour
 ``` js
 socket.emit('updateVehicle', query, update);
 ```
 * `query` et `update` sont basés sur le même modèle que `data`
 
-#### Sélection
+##### Sélection
 ``` js
 socket.emit('selectVehicles', query, callback);
 ```
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
+
+### Appels spécifiques
+#### Récupération des arrets selon des coordonnées GPS et un périmètre
+``` js
+var point = {
+    longitude = "...",
+    latitude = "..."
+};
+
+socket.emit('searchStopsNearTo', point, distance, callback);
+```
+* `distance` représente le périmètre de recherche en mètre par rapport au point
+
+#### Récupération des itineraires d'un point A à un point B
+``` js
+socket.emit('searchRoute', pointA, pointB, distance, callback);
+```
+* `pointA` et `pointB` sont sur le meme modèle que `point`
+
 
 Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
 
