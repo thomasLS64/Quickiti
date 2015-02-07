@@ -49,7 +49,7 @@ var arretSchema = new mongoose.Schema({
 	stop_lon : Number,
 	stop_url : String,
 	location_type : Number,
-	location : {type: [Number], index: '2d'},
+	location : { type: [Number], index : "2dsphere" },
 	compagnieId : Schema.ObjectId
 });
 
@@ -427,8 +427,14 @@ io.on('connection', function(socket) {
 	socket.on('searchStopsNearTo', function(point, distance, callback) {
 		arretModel.find({
 			'location': {
-				$near: [point.latitude, point.longitude],
+				$nearSphere: {
+				$geometry: {
+					type : "Point",
+					coordinates : [ point.latitude, point.longitude ]
+				},
+				$minDistance: 0,
 				$maxDistance: distance
+				}
 			}
 		}, function(err, d) {
 			if(callback) callback(err, d);

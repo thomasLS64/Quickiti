@@ -53,7 +53,7 @@ serveurGestionBD.emit('createAgency', {
 								stop_name : "Arret de la Barre",
 								stop_desc : "Plage de la Barre",
 								location_type : 1,
-								stop_lon : 40.32458464,
+								stop_lon : 40.32458470,
 								stop_lat : 24.21574,
 								compagnieId : d[0]["_id"]
 							}, function(etat) {
@@ -63,9 +63,9 @@ serveurGestionBD.emit('createAgency', {
 									// Recherche des arrets
 									console.log('Recherche des arrets');
 									serveurGestionBD.emit('searchStopsNearTo', {
-										latitude : 40.32458427,
-										longitude : 24.21574
-									}, 25, function(err, d) {
+										longitude : 40.32458471,
+										latitude : 24.21574
+									}, 1, function(err, d) {
 										if(!err)
 											console.log(d);
 										else
