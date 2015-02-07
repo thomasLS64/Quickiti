@@ -55,22 +55,28 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
                     ** var stopStart = { stopStartAgency1{..}, stopStartAgency2{..}, .. , stopStartAgencyN }
                     ** var stopEnd est similaire à stopStart 
                     ** var stopStartAgency = { line1{..}, line2{..}, .. , lineN{..} } // agence de l'arrêt de départ
-                    ** var line = { time1 , time2, .. , timeN} // avec (timeN-time1 < 5) heures par exemple
-                    **
+                    ** var line = { (time1, vehicul1{..}), (time2, vehicul1{..}), .. , (timeN} // avec (timeN-time1 < 5) heures par exemple
+                    ** je sais pas trop comment intégrer les véhicule 
                     */
+
+                    // Demande des horaires en temps réel au serveur de récupération de données
                     serveurRecuperationDonnees.emit('searchRoutesRealTime',
                                                     {routes : routes},
                                                     function (etat, routesRealTime){
                         if(etat){
+                            // horaires obtenu en temps réel ou partiellement en temps réel
                             if(callback) callback(etat, routesRealTime);
                         }
                         else{
+                            // horaires prévu par la compagnie
                             if(callback) callback(etat, routes);
                         }
                     });
                 }
                 else {
+                    // Il y a eu une erreur lors de la récupération de l'itinéraire
                     console.log('Erreur dans la recuperation de l itineraire')
+                    if(callback) callback(etat);
                 }
             });
         }
@@ -94,23 +100,31 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
                     ** var line = { time1 , time2, .. , timeN} // avec (timeN-time1 < 5) heures par exemple
                     **
                     */
+
+                    // Demande des horaires en temps réel au serveur de récupération de données pour les arrêts
                     serveurRecuperationDonnees.emit('searchStopsNearToRealTime',
                                                     {routes : routes},
                                                     function (etat, stopsNearToRealTime){
                         if(etat){
+                            // horaires obtenu en temps réel ou partiellement en temps réel
                             if(callback) callback(etat, stopsNearToRealTime);
                         }
                         else{
+                            // horaires prévu par la compagnie
                             if(callback) callback(etat, stopsNearTo);
                         }
                     });
                 }
                 else {
-                    console.log('Erreur dans la recuperation de l itineraire')
+                    // il y a eu une erreur dans
+                    console.log('Erreur dans la recuperation de l arret')
+                    if(callback) callback(etat);
                 }
             });
         }
         else{
+            // le type de requete n'existe pas ou n'est pas encore implémenté
             console.log('La fonctionnalite  ' requestType '  n pas encore ete developpe');
+            if(callback) callback(etat);
         }            
 });
