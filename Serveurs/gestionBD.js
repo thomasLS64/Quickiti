@@ -49,6 +49,7 @@ var arretSchema = new mongoose.Schema({
 	stop_lon : Number,
 	stop_url : String,
 	location_type : Number,
+	location : {type: [Number], index: '2d'},
 	compagnieId : Schema.ObjectId
 });
 
@@ -185,7 +186,7 @@ io.on('connection', function(socket) {
 				console.log('Database Agencies select : false');
 			else
 				console.log('Database Agencies select : true');
-			callback(err, d);
+			if(callback) callback(err, d);
 		});
 	});
 
@@ -208,7 +209,7 @@ io.on('connection', function(socket) {
 	**			compagnieId : "..."
 	**		});
 	*/
-	socket.on('createLine', function(d) {
+	socket.on('createLine', function(d, callback) {
 		// Initialisation de la nouvelle ligne
 		var newLine = new ligneModel();
 
@@ -225,10 +226,14 @@ io.on('connection', function(socket) {
 
 		// Insertion en base de données
 		newLine.save(function(err) {
-			if(err)
+			if(err) {
 				console.log('Database Line creation : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Line creation : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -260,12 +265,16 @@ io.on('connection', function(socket) {
 	**
 	**		socket.emit('updateLine', query, update);
 	*/
-	socket.on('updateLine', function(query, update) {
+	socket.on('updateLine', function(query, update, callback) {
 		ligneModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err)
+			if(err) {
 				console.log('Database Line update : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Line update : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -292,7 +301,7 @@ io.on('connection', function(socket) {
 				console.log('Database Lines select : false');
 			else
 				console.log('Database Lines select : true');
-			callback(err, d);
+			if(callback) callback(err, d);
 		});
 	});
 
@@ -314,7 +323,7 @@ io.on('connection', function(socket) {
 	**			compagnieId : "..."
 	**		});
 	*/
-	socket.on('createStop', function(d) {
+	socket.on('createStop', function(d, callback) {
 		// Initialisation du nouvel arret
 		var newStop = new arretModel();
 
@@ -322,18 +331,21 @@ io.on('connection', function(socket) {
 		newStop.stop_id = d.stop_id;
 		newStop.stop_name = d.stop_name;
 		newStop.stop_desc = d.stop_desc;
-		newStop.stop_lat = d.stop_lat;
-		newStop.stop_lon = d.stop_lon;
 		newStop.stop_url = d.stop_url;
 		newStop.location_type = d.location_type;
+		newStop.location = [d.stop_lat, d.stop_lon];
 		newStop.compagnieId = d.compagnieId;
 
 		// Insertion en base de données
 		newStop.save(function(err) {
-			if(err)
+			if(err) {
 				console.log('Database Stop creation : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Stop creation : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -363,12 +375,16 @@ io.on('connection', function(socket) {
 	**
 	**		socket.emit('updateStop', query, update);
 	*/
-	socket.on('updateStop', function(query, update) {
+	socket.on('updateStop', function(query, update, callback) {
 		arretModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err)
+			if(err) {
 				console.log('Database Stop update : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Stop update : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -394,7 +410,28 @@ io.on('connection', function(socket) {
 				console.log('Database Stop select : false');
 			else
 				console.log('Database Stop select : true');
-			callback(err, d);
+			if(callback) callback(err, d);
+		});
+	});
+
+	/*
+	**	Récupération des arrets selon ses coordonnées GPS et un périmètre
+	**
+	**		point = {
+	**			latitude : ...,
+	**			longitude : ...
+	**		};
+	**
+	**		socket.emit('searchStopsNearTo', point, distance, callback);
+	*/
+	socket.on('searchStopsNearTo', function(point, distance, callback) {
+		arretModel.find({
+			'location': {
+				$near: [point.latitude, point.longitude],
+				$maxDistance: distance
+			}
+		}, function(err, d) {
+			if(callback) callback(err, d);
 		});
 	});
 
@@ -410,7 +447,7 @@ io.on('connection', function(socket) {
 	**			ligneId : "..."
 	**		});
 	*/
-	socket.on('createStopLine', function(d) {
+	socket.on('createStopLine', function(d, callback) {
 		// Initialisation du nouveau lien
 		var newStopLine = new arretLigneModel();
 
@@ -420,10 +457,14 @@ io.on('connection', function(socket) {
 
 		// Insertion en base de données
 		newStop.save(function(err) {
-			if(err)
+			if(err) {
 				console.log('Database link between Stop & Line creation : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database link between Stop & Line creation : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -441,12 +482,16 @@ io.on('connection', function(socket) {
 	**
 	**		socket.emit('updateStopLine', query, update);
 	*/
-	socket.on('updateStopLine', function(query, update) {
+	socket.on('updateStopLine', function(query, update, callback) {
 		arretLigneModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err)
+			if(err) {
 				console.log('Database link between Stop & Line update : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database link between Stop & Line update : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -466,7 +511,7 @@ io.on('connection', function(socket) {
 				console.log('Database link between Stop & Line select : false');
 			else
 				console.log('Database link between Stop & Line select : true');
-			callback(err, d);
+			if(callback) callback(err, d);
 		});
 	});
 
@@ -474,13 +519,6 @@ io.on('connection', function(socket) {
 	/*
 	**	Véhicule
 	**	----------------------
-var vehiculeSchema = new mongoose.Schema({
-	longitude : Number,
-	latitude : Number,
-	ligneId : Schema.ObjectId,
-	compagnieId : Schema.ObjectId,
-	date : { type : Date, default : Date.now },
-});
 	**
 	**	Création d'un véhicule
 	**
@@ -491,7 +529,7 @@ var vehiculeSchema = new mongoose.Schema({
 	**			compagnieId = "..."
 	**		});
 	*/
-	socket.on('createVehicle', function(d) {
+	socket.on('createVehicle', function(d, callback) {
 		// Initialisation du nouveau véhicule
 		var newVehicle = new vehiculeModel();
 
@@ -503,10 +541,14 @@ var vehiculeSchema = new mongoose.Schema({
 
 		// Insertion en base de données
 		newVehicle.save(function(err) {
-			if(err)
+			if(err) {
 				console.log('Database Vehicle creation : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Vehicle creation : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -528,12 +570,16 @@ var vehiculeSchema = new mongoose.Schema({
 	**
 	**		socket.emit('updateVehicle', query, update);
 	*/
-	socket.on('updateVehicle', function(query, update) {
+	socket.on('updateVehicle', function(query, update, callback) {
 		vehiculeModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err)
+			if(err) {
 				console.log('Database Vehicle update : false');
-			else
+				if(callback) callback(false);
+			}
+			else {
 				console.log('Database Vehicle update : true');
+				if(callback) callback(true);
+			}
 		});
 	});
 
@@ -555,7 +601,7 @@ var vehiculeSchema = new mongoose.Schema({
 				console.log('Database Vehicle select : false');
 			else
 				console.log('Database Vehicle select : true');
-			callback(err, d);
+			if(callback) callback(err, d);
 		});
 	});
 });
