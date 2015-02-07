@@ -191,7 +191,7 @@ socket.emit('searchStopsNearTo', point, distance, callback);
 
 #### Récupération des itineraires d'un point A à un point B
 ``` js
-socket.emit('searchRoute', pointA, pointB, distance, callback);
+socket.emit('searchRoutes', pointA, pointB, distance, callback);
 ```
 * `pointA` et `pointB` sont sur le meme modèle que `point`
 
