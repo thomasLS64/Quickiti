@@ -2,10 +2,10 @@ var port = 8008, // Port d'écoute des sockets
     io = require('socket.io')(port); // socket.io pour la communication entre serveurs
 
 // Connexion au Serveur de gestion de la BD
-var clientGestBD =  require('socket.io-client')('http://localhost:7007/')//, { reconnection : true, reconnectionDelay : 2000, reconnectionDelayMax : 100000 })
+var serverGestionBD = io.connect('http://localhost:7007');
 
 // Se connecte au Serveur de récupération de données
-var clientGestBD =  require('socket.io-client')('http://localhost:9009/')//, { reconnection : true, reconnectionDelay : 2000, reconnectionDelayMax : 100000 })
+var serveurRecuperationDonnees = io.connect('http://localhost:9009');
 
 /*
 // Se connecte au Serveur client web
@@ -15,7 +15,7 @@ Car c'est au client de se connecter
 
 
 // Quand un client se connecte en appellant la fonction con, ici le serveur site client et pour le site pour les compagnies 
-io.on('connection', function (socket, callback) { // socket pour avoir une instance différente pour chaque seveur
+io.sockets.on('connection', function (socket, callback) { // socket pour avoir une instance différente pour chaque seveur
     /* lorsque la fonction "clientRequest" est appelé depuis le site client
     ** 
     ** description des paramètres de la fonction:
@@ -42,8 +42,8 @@ io.on('connection', function (socket, callback) { // socket pour avoir une insta
             console.log('La requète demandé est un itinéraire, envoie de la recherche à la BD');
             // demande à la base de donnée de calculé l'itinéraire et les informations stocké correspondantes
             serverGestionBD.emit('searchRoute',
-                                                {request : request,
-                                                 perimeter : perimeter},
+                                                {request = request,
+                                                 perimeter = perimeter},
                                                 function (etat, routes){
                 if(etat){
                     console.log('Le ou les itinéraires sont reçus');
@@ -91,8 +91,8 @@ io.on('connection', function (socket, callback) { // socket pour avoir une insta
 
             // demande à la base de donnée de calculé les arrêts à proximités et les informations stocké correspondantes
             serverGestionBD.emit('searchStopsNearTo',
-                                                {request : request,
-                                                 perimeter : perimeter},
+                                                {request = request,
+                                                 perimeter = perimeter},
                                                 function (etat, stopsNearTo){
                 if(etat){
                     console.log('Réception des arrêts à proximités');
@@ -137,6 +137,5 @@ io.on('connection', function (socket, callback) { // socket pour avoir une insta
             // le type de requete n'existe pas ou n'est pas encore implémenté
             console.log('La fonctionnalité  ' + requestType + '  n\'pas encore été développée');
             if(callback) callback(etat);
-        }
-    });
+        }            
 });
