@@ -151,7 +151,7 @@ function downloadGTFS(name, urlGTFS, callback) {
 						.on('error', cb);
 				}
 			},
-			function (cb) {
+			function (allFilesProcessed) {
 				/*
 				var compagnieSchema = {
 					agency_id : String,
@@ -199,9 +199,9 @@ function downloadGTFS(name, urlGTFS, callback) {
 							agency_name: 		{ required: true },
 							agency_url: 		{ required: true }, //Site officiel de la compagnie
 							agency_fare_url: 	{ required: false }, //Lien d'achat de ticket pour la compagnie
-							agency_timezone : 	{ required: true },
-							agency_phone: 		{ required: true },
-							agency_lang: 		{ required: true },
+							agency_timezone: 	{ required: false },
+							agency_phone: 		{ required: false },
+							agency_lang: 		{ required: false },
 						}
 					},
 					{
@@ -213,8 +213,6 @@ function downloadGTFS(name, urlGTFS, callback) {
 							stop_id: 			{ required: true },
 							stop_code: 			{ required: false },
 							stop_name: 			{ required: true },
-							stop_code: 			{ required: true },
-							stop_code: 			{ required: true },
 							stop_lat: 			{ required: true, type: "Float" },
 							stop_lon: 			{ required: true, type: "Float" },
 							stop_url: 			{ required: false },
@@ -244,20 +242,20 @@ function downloadGTFS(name, urlGTFS, callback) {
 							service_id: 		{ required: true },
 							trip_id: 			{ required: true },
 							trip_headsign: 		{ required: true },
-						}
-					}
+						},
+					},
 				];
 				var toReturn = {};
 				async.eachSeries(toGrab, 
-					function (file, cb) {
+					function (file, fileHasBeenProcessed) {
 						var filepath = path.join(downloadDir, file.fileName);
 						if (!_.has(toReturn, file.internalName)) {
 							toReturn[file.internalName] = {};
 						}
 						if (!fs.existsSync(filepath)) {
 							if (file.required)
-								return cb(new Error("Fichier " + file.fileName + " introuvable"));
-							return cb();
+								return fileHasBeenProcessed(new Error("Fichier " + file.fileName + " introuvable"));
+							return fileHasBeenProcessed();
 						}
 						console.log("Importation du fichier " + file.fileName.grey + " de la compagnie " + name.grey);
 						var input = fs.createReadStream(filepath);
@@ -273,7 +271,7 @@ function downloadGTFS(name, urlGTFS, callback) {
 									}
 									//On vérifie si l'attribut qui sert d'ID est présent, sinon on lève une erreur
 									if (!_.has(file.attributes, file.internalId)) {
-										return cb(new Error("L'attribut d'identification " + file.internalId + " n'a pas été trouvé dans le fichier " + file.fileName));
+										return fileHasBeenProcessed(new Error("L'attribut d'identification " + file.internalId + " n'a pas été trouvé dans le fichier " + file.fileName));
 									}
 									else {
 										var id = line[file.internalId];
@@ -286,7 +284,7 @@ function downloadGTFS(name, urlGTFS, callback) {
 										//On vérifie que l'attribut est bien présent dans la ligne qu'on est entrain de scanner, si
 										//c'est pas le cas on lève une erreur, sinon on continue en transtypant l'information si un type a été donnée
 										if (file.attributes[attribute].required && !_.has(line, attribute)) {
-											return cb(new Error("L'attribut " + attribute + " n'a pas été trouvé dans le fichier " + file.fileName));
+											return fileHasBeenProcessed(new Error("L'attribut " + attribute + " n'a pas été trouvé dans le fichier " + file.fileName));
 										}
 
 										if (_.has(file.attributes[attribute], 'type')) {
@@ -307,22 +305,25 @@ function downloadGTFS(name, urlGTFS, callback) {
 						parser.on('end', 
 							function(count){
 								console.log("Fichier " + file.fileName.grey + " de la compagnie " + name.grey + " importé");
-								cb();
+								fileHasBeenProcessed();
 							}
 						);
-						parser.on('error', cb);
+						parser.on('error', fileHasBeenProcessed);
 						input.pipe(parser);
 					}, function (e){
 						console.log(toReturn);
-						cb();
+						allFilesProcessed(e);
 					}
 				);
 			}
 		],
-		callback
+		function (a) {
+			callback(a);
+		}
 	);
 }
 function test(a) {
+	console.log("ok");
 	console.log(a);
 }
 downloadGTFS("Test", "Test.zip", test);
