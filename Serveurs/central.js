@@ -27,22 +27,26 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
     **                      longitude : ".."},
     **                 coordSecond = {..}
     **               }
+    ** La variable request possède un ou deux points de coordonnée
+    **     en fonction du type de la requète.
     ** var perimeter = 15; l'unité est 
     ** 
     */
     socket.on('clientRequest', function (requestType, request, perimeter, callback){ 
-
+        console.log('un serveur client s\'est connecté');
         // Initialisation de la réponse
         var reponseFinal = false;
 
         // Vérification du type de requete
         if(requestType == 'route') {
+            console.log('La requète demandé est un itinéraire, envoie de la recherche à la BD');
             // demande à la base de donnée de calculé l'itinéraire et les informations stocké correspondantes
             serverGestionBD.emit('searchRoute',
                                                 {request = request,
                                                  perimeter = perimeter},
                                                 function (etat, routes){
                 if(etat){
+                    console.log('Le ou les itinéraires sont reçus');
 
                     /*
                     ** description des paramètres de la fonction:
@@ -64,10 +68,12 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
                                                     {routes : routes},
                                                     function (etat, routesRealTime){
                         if(etat){
+                            console.log('Le temps réel est obtenu ou partiellement, callback des itinéraires reçus par le serveur de récupération de données');
                             // horaires obtenu en temps réel ou partiellement en temps réel
                             if(callback) callback(etat, routesRealTime);
                         }
                         else{
+                            console.log('Pas de temps réel, callback des itinéraires reçus par le SGBD');
                             // horaires prévu par la compagnie
                             if(callback) callback(etat, routes);
                         }
@@ -75,18 +81,21 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
                 }
                 else {
                     // Il y a eu une erreur lors de la récupération de l'itinéraire
-                    console.log('Erreur dans la recuperation de l itineraire')
+                    console.log('Erreur dans la récuperation de l\'itineraire');
                     if(callback) callback(etat);
                 }
             });
         }
         else if(requestType == 'stopsNearTo'){
+            console.log('La requète demandée est une recherche sur un lieu, envoie de la recherche à la BD');
+
             // demande à la base de donnée de calculé les arrêts à proximités et les informations stocké correspondantes
             serverGestionBD.emit('searchStopsNearTo',
                                                 {request = request,
                                                  perimeter = perimeter},
                                                 function (etat, stopsNearTo){
                 if(etat){
+                    console.log('Réception des arrêts à proximités');
 
                     /*
                     ** description des paramètres de la fonction:
@@ -106,10 +115,12 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
                                                     {routes : routes},
                                                     function (etat, stopsNearToRealTime){
                         if(etat){
+                            console.log('Le temps réel est obtenu ou partiellement, callback des arrêts reçus par le serveur de récupération de données');
                             // horaires obtenu en temps réel ou partiellement en temps réel
                             if(callback) callback(etat, stopsNearToRealTime);
                         }
                         else{
+                            console.log('Pas de temps réel, callbak des arrêts reçus par le SGBD');
                             // horaires prévu par la compagnie
                             if(callback) callback(etat, stopsNearTo);
                         }
@@ -117,14 +128,14 @@ io.sockets.on('connection', function (socket, callback) { // socket pour avoir u
                 }
                 else {
                     // il y a eu une erreur dans
-                    console.log('Erreur dans la recuperation de l arret')
+                    console.log('Erreur dans la récuperation des arrêts');
                     if(callback) callback(etat);
                 }
             });
         }
         else{
             // le type de requete n'existe pas ou n'est pas encore implémenté
-            console.log('La fonctionnalite  ' requestType '  n pas encore ete developpe');
+            console.log('La fonctionnalité  ' + requestType + '  n\'pas encore été développée');
             if(callback) callback(etat);
         }            
 });
