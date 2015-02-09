@@ -5,7 +5,7 @@ var port = 8008, // Port d'écoute des sockets
 var clientGestBD =  require('socket.io-client')('http://localhost:7007/')//, { reconnection : true, reconnectionDelay : 2000, reconnectionDelayMax : 100000 })
 
 // Se connecte au Serveur de récupération de données
-var clientGestBD =  require('socket.io-client')('http://localhost:9009/')//, { reconnection : true, reconnectionDelay : 2000, reconnectionDelayMax : 100000 })
+var serveurRecuperationDonnees =  require('socket.io-client')('http://localhost:9009/')//, { reconnection : true, reconnectionDelay : 2000, reconnectionDelayMax : 100000 })
 
 /*
 // Se connecte au Serveur client web
