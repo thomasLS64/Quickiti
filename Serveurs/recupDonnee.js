@@ -11,6 +11,7 @@ exec = 			require('exec'), 				//supprimer les fichiers temporaires
 request = 		require('request'), 			//récuperer des fichiers extérieurs en HTTP
 unzip = 		require('unzip'), 				//dézipper les fichiers zip qu'on récupère
 csv = 			require('csv'), 				//traiter les fichiers GTFS
+GtfsRealtimeBindings = require('gtfs-realtime-bindings'), // GTFS RealTime
 downloadDir = '../Test/GTFSDatas';				//Nom du dossier de téléchargment des fichiers GTFS
 try {
 	fs.mkdirSync(downloadDir);
@@ -69,7 +70,9 @@ clientGestBD.on('reconnect_error', function() {
 	Evenement déclanché quand on a atteind la limite de temps passé à essayer de se reconnecter au serveur de gestion de la bdd
 */
 
-clientGestBD.on('reconnect_failed', function() { console.error("Reconnexion impossible.".red); });
+clientGestBD.on('reconnect_failed', function() { 
+	console.error("Reconnexion impossible.".red);
+});
 
 
 /*
@@ -82,7 +85,7 @@ clientGestBD.on('reconnect_failed', function() { console.error("Reconnexion impo
 
 io.on('connection', function (socket) {
 
-	console.log(color.cyan("Un client est connecté" + socket.client));
+	console.log("Un client est connecté");
 	/*
 		Inscription d'une agence
 
@@ -94,7 +97,8 @@ io.on('connection', function (socket) {
 				password: "...",
 				adress: "...",
 				zipCode: "...",
-				urlSIRI: "..."
+				urlSIRI: "...",
+				urlGTFSRealtime: "..."
 			}
 
 		- On se connecte alors au serveur GTFS s'il y en a un puis on télécharge le fichier zip, on le dézippe puis
@@ -110,6 +114,7 @@ io.on('connection', function (socket) {
 		console.log("Demande d'inscription de l'agence : " + Agency.name.grey);
 		console.log("Url GTFS : " + Agency.urlGTFS.grey);
 		console.log("Url Siri : " + Agency.urlSIRI.grey);
+		console.log("Url GTFSRealtime : " + Agency.urlGTFSRealtime.grey);
 		console.log("Email : " + Agency.email.grey);
 		console.log("Adresse : " + Agency.adress.grey);
 		console.log("------------------------------".bold);
@@ -147,6 +152,11 @@ io.on('connection', function (socket) {
 				callback({ error: err });
 			}
 		});
+	});
+	socket.on('searchRoutesRealTime', function (stops, callback) {
+		//Vérification de l'existance de données en temps réel 
+
+		//
 	});
 });
 function clearDirectory(directory, cb) {
@@ -413,3 +423,23 @@ function downloadAndParseGTFS(name, urlGTFS, callback) {
 		}
 	);
 };
+
+//Fonction pour aller récupérer des infos en GTFS Realtime
+
+function getGTFSRealtime(url, callback) {
+	var requestSettings = {
+		method: 'GET',
+		url: url,
+		encoding: null
+	};
+	request(requestSettings, function (error, response, body) {
+		if (!error && response.statusCode == 200) {
+			var feed = GtfsRealtimeBindings.FeedMessage.decode(body);
+			feed.entity.forEach(function(entity) {
+				if (entity.trip_update) {
+					console.log(entity.trip_update);
+				}
+			});
+		}
+	});
+}

@@ -9,6 +9,7 @@ serveurRecupDonnee.emit('agencySubscribe', {
 	zipCode: 84848,
 	urlGTFS: "../Test/Test.zip",
 	urlSIRI: "",
+	urlGTFSRealtime: "",
 	adress: "3 Rue des abricots",
 }, function(etat) {
 		console.log(etat);
