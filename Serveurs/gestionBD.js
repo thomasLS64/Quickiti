@@ -45,8 +45,6 @@ var arretSchema = new mongoose.Schema({
 	stop_id : String,
 	stop_name : String,
 	stop_desc : String,
-	stop_lat : Number,
-	stop_lon : Number,
 	stop_url : String,
 	location_type : Number,
 	location : { type: [Number], index : "2dsphere" },
@@ -414,33 +412,6 @@ io.on('connection', function(socket) {
 		});
 	});
 
-	/*
-	**	Récupération des arrets selon ses coordonnées GPS et un périmètre
-	**
-	**		point = {
-	**			latitude : ...,
-	**			longitude : ...
-	**		};
-	**
-	**		socket.emit('searchStopsNearTo', point, distance, callback);
-	*/
-	socket.on('searchStopsNearTo', function(point, distance, callback) {
-		arretModel.find({
-			'location': {
-				$nearSphere: {
-				$geometry: {
-					type : "Point",
-					coordinates : [ point.latitude, point.longitude ]
-				},
-				$minDistance: 0,
-				$maxDistance: distance
-				}
-			}
-		}, function(err, d) {
-			if(callback) callback(err, d);
-		});
-	});
-
 
 	/*
 	**	Arret et Ligne
@@ -609,5 +580,117 @@ io.on('connection', function(socket) {
 				console.log('Database Vehicle select : true');
 			if(callback) callback(err, d);
 		});
+	});
+
+
+
+	/*
+	**	Récupération des arrets selon ses coordonnées GPS et un périmètre
+	**
+	**		point = {
+	**			latitude : ...,
+	**			longitude : ...
+	**		};
+	**
+	**		socket.emit('searchStopsNearTo', point, distance, callback);
+	*/
+	socket.on('searchStopsNearTo', function(point, distance, callback) {
+		arretModel.find({
+			'location': {
+				$nearSphere: {
+					$geometry: {
+						type : "Point",
+						coordinates : [ point.latitude, point.longitude ]
+					},
+					$minDistance: 0,
+					$maxDistance: distance
+				}
+			}
+		}, function(err, d) {
+			if(callback) callback(err, d);
+		});
+	});
+
+	/*
+	**	Récupération des lignes d'après un itinéraire
+	**
+	**		points = [];
+	**
+	**		points[0] = {
+	**			latitude : ...,
+	**			longitude : ...
+	**		};
+	**
+	**		...
+	**
+	**		points[n] = { ... };
+	**
+	**		socket.emit('searchRoutes', points, perimetre, callback);
+	*/
+	socket.on('searchRoutes', function(points, perimeter, callback) {
+		// Recupération de tout les arrets à proximités des points de passege de l'itinéraire
+		for(var i=0; i<points.length; i++) {
+			arretModel.find({
+				'location': {
+					$nearSphere: {
+						$geometry: {
+							type : "Point",
+							coordinates : [ points[i].latitude, points[i].longitude ]
+						},
+						$minDistance: 0,
+						$maxDistance: distance
+					}
+				}
+			},  function(err, arretsDuPoint) {
+				if(!err) {
+					points[i].arrets = [];
+					points[i].arrets.push(arretsDuPoint);
+
+					// Récupération des lignes de chaque arrets
+					for(var k=0; k<arretsDuPoint.length; k++) {
+						arretLigneModel.find({'arretId':arretsDuPoint[i][k]._id}, function(err, lignesDeLArret) {
+							if(!err) {
+								points[i].arrets[k].lignes = [];
+								points[i].arrets[k].lignes.push(lignesDeLArret);
+							}
+							else
+								if(callback) callback(err, null);
+						});
+					}
+				}
+				else
+					if(callback) callback(err, null);
+
+			});
+		}
+
+		// APRES
+		// Parcours de tous les points
+		for(var i=0; i<points.length-1; i++) {
+			// Itinéraire possibles du point n au point n+1
+			var itineraires = [];
+
+			// Parcours des arrets du point n et n+1
+			for(var k1=0; k1<points[i].arrets.length; k1++) {
+				for(var k2=0; k2<points[i+1].arrets.length; k2++) {
+
+					// Parcours des lignes des arrets du point n et n+1
+					for(var w1=0; w1<points[i].arrets[k1].length; w1++) {
+						for(var w2=0; w2<points[i].arrets[k2].length; w2++) {
+							if(points[i].arrets[k1].lignes[w1] == points[i+1].arrets[k2].lignes[k2]) {
+								itineraires[itineraires.length].ligne = points[i].arrets[k1].lignes[w1]._id;
+								itineraires[itineraires.length].arretDepart = points[i].arrets[k1]._id;
+								itineraires[itineraires.length].arretFin = points[i].arrets[k2]._id;
+							}
+						}
+					}
+				}
+			}
+
+			points[i] = itineraires;
+		}
+
+		// APRES
+		if(callback) callback(null, points);
 	});
 });
