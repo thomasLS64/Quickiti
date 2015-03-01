@@ -1,0 +1,32 @@
+html {
+	overflow: hidden;
+}
+
+body {
+	background-color: rgb(230, 230, 230);
+}
+
+#map {
+	height: 100%;
+	width: 100%;
+}
+
+#informationBarre {
+	position: absolute;
+	z-index: 2;
+	top: 0;
+	left: 0;
+	width: 40%;
+	max-width: 450px;
+}
+
+#informationBarre .screens-card .screens li {
+	position: relative;
+	padding-bottom: 3.3em;
+}
+
+#informationBarre .screens form .input-full-btn {
+	position: absolute;
+	left: 0;
+	right: 0;
+}

@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Quickiti</title>
+	<link href='http://fonts.googleapis.com/css?family=Roboto' rel='stylesheet' type='text/css'>
+	<!-- CSS -->
+	<!-- Normalisation des propriétés entre les navigateurs -->
+	<link rel="stylesheet" type="text/css" href="css/normalize.css">
+	<!-- Bibliothèque de Leaflet -->
+	<link rel="stylesheet" href="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.css" />
+	<!-- Bibliothèque de Quickiti -->
+	<link rel="stylesheet" type="text/css" href="css/quickitiCSS.css">
+	<!-- CSS de l'application web -->
+	<link rel="stylesheet" type="text/css" href="css/app.css">
+</head>
+<body>
+
+	<!-- Conteneur de la map de OpenLayer -->
+	<div id="map"></div>
+
+	<!-- Barre d'interaction et d'information de l'utilisateur -->
+	<div id="informationBarre">
+		<div class="screens-card">
+			<ul class="nav-screens">
+				<li screen="1" class="actif">Recherche simple</li>
+				<li screen="2">Itinéraire</li>
+			</ul>
+			<ul class="screens">
+				<li class="actif">
+					<form id="simpleSearch" method="POST" action="#">
+						<label for="locality">Localité</label>
+						<input type="text" id="locality" class="input-text" placeholder="Maire de Biarritz">
+						<input type="submit" class="input-full-btn" value="Rechercher">
+					</form>
+				</li>
+				<li>
+					<form id="routesSearch" method="POST" action="#">
+						<label for="nomDepart">De</label>
+						<input type="text" id="nomDepart" class="input-text" placeholder="Maire de Biarritz">
+						<label for="nomArrive">à</label>
+						<input type="text" id="nomArrive" class="input-text" placeholder="26 rue Neuve, 64600 Anglet">
+						<input type="submit" class="input-full-btn" value="Rechercher">
+					</form>
+				</li>
+			</ul>
+		</div>
+	</div>
+
+	<!-- Bibliothèque de Leaflet -->
+	<script src="http://cdn.leafletjs.com/leaflet-0.7.3/leaflet.js"></script>
+	<!-- Interaction avec la map -->
+	<script type="text/javascript" src="js/map.js"></script>
+	<!-- Interaction avec la barre utilisateur -->
+	<script type="text/javascript" src="js/informationBarre.js"></script>
+
+</body>
+</html>
