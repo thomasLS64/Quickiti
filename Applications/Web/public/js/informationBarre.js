@@ -154,32 +154,32 @@ window.onload = function() {
 			parent = src.parentNode,
 			suggestions = src.nextElementSibling;
 
-		if(suggestions.getAttribute('class') == 'suggestions')
-			suggestions.classList.add('actif')
-
-		for(var i=0; i<suggestions.querySelectorAll('li').length; i++) {
+		for(var i=0; i<suggestions.querySelectorAll('li').length; i++)
 			suggestions.removeChild(suggestions.querySelectorAll('li')[i]);
+
+		if(value.length > 4) {
+			if(suggestions.getAttribute('class') == 'suggestions')
+				suggestions.classList.add('actif')
+
+			recupInformationsByAdress(value, function(response) {
+				for(var i in response.results) {
+					var li = document.createElement('li');
+					li.innerHTML = response.results[i].formatted_address;
+					li.onclick = function() {
+						var value = this.innerHTML,
+							parent = this.parentNode,
+							input = parent.previousElementSibling,
+							form = parent.parentNode;
+
+						input.value = value;
+						input.focus();
+						suggestions.classList.remove('actif');
+						//form.submit();
+					};
+
+					suggestions.appendChild(li);
+				}
+			});
 		}
-
-		recupInformationsByAdress(value, function(response) {
-			for(var i in response.results) {
-				var li = document.createElement('li');
-				li.innerHTML = response.results[i].formatted_address;
-				li.onclick = function() {
-					var value = this.innerHTML,
-						parent = this.parentNode,
-						input = parent.previousElementSibling,
-						form = parent.parentNode;
-
-					input.value = value;
-					input.focus();
-					suggestions.classList.remove('actif');
-					//form.submit();
-				};
-
-				suggestions.appendChild(li);
-			}
-		});
-
 	};
 }
