@@ -203,3 +203,24 @@ label {
 .screens-card .screens li.actif {
 	display: block;
 }
+
+.suggestions {
+	display: none;
+	margin-top: -11px;
+	background: #E0E0E0;
+	padding: 0;
+	max-height: 300px;
+	overflow: auto;
+}
+.suggestions.actif { display: block; }
+
+.suggestions li {
+	display: block !important;
+	padding: 1em !important;
+}
+
+.suggestions li:hover,
+.suggestions li.actif {
+	background: #448AFF;
+	cursor: pointer;
+}

@@ -28,18 +28,21 @@
 			</ul>
 			<ul class="screens">
 				<li class="actif">
-					<form id="simpleSearch" method="POST" action="#">
+					<form id="simpleSearch" method="POST">
 						<label for="locality">Localité</label>
-						<input type="text" id="locality" class="input-text" placeholder="Maire de Biarritz">
+						<input type="text" id="locality" class="input-text" autocomplete="off" placeholder="Maire de Biarritz">
+						<ul class="suggestions"></ul>
 						<input type="submit" class="input-full-btn" value="Rechercher">
 					</form>
 				</li>
 				<li>
-					<form id="routesSearch" method="POST" action="#">
+					<form id="routesSearch" method="POST">
 						<label for="nomDepart">De</label>
-						<input type="text" id="nomDepart" class="input-text" placeholder="Maire de Biarritz">
+						<input type="text" id="nomDepart" class="input-text" autocomplete="off" placeholder="Maire de Biarritz">
+						<ul class="suggestions"></ul>
 						<label for="nomArrive">à</label>
-						<input type="text" id="nomArrive" class="input-text" placeholder="26 rue Neuve, 64600 Anglet">
+						<input type="text" id="nomArrive" class="input-text" autocomplete="off" placeholder="26 rue Neuve, 64600 Anglet">
+						<ul class="suggestions"></ul>
 						<input type="submit" class="input-full-btn" value="Rechercher">
 					</form>
 				</li>
