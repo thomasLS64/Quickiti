@@ -68,6 +68,7 @@ var app = {
 		});
 	},
 
+	// Fonction à l'envoi du formulaire de recherche d'itinéraire
 	routeSearchSubmit : function(e) {
 		var nomDepart = document.querySelector('#nomDepart').value,
 			nomArrive = document.querySelector('#nomArrive').value;
