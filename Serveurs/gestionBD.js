@@ -1,6 +1,7 @@
 var port = 7007, // Port d'écoute des sockets
 	io = require('socket.io')(port), // Socket.IO pour la communication entre serveurs
 	mongoose = require('mongoose'), // ODM pour MongoDB
+	async = require('async'),
 	Schema = mongoose.Schema;
 
 /*
@@ -13,7 +14,6 @@ mongoose.connect('mongodb://localhost/quickiti', function(err) {
 	else
 		console.log('Database connexion : true');
 });
-
 // Création des différents schémas
 //	Schéma d'une compagnie de transport
 var compagnieSchema = new mongoose.Schema({
@@ -628,69 +628,94 @@ io.on('connection', function(socket) {
 	**		socket.emit('searchRoutes', points, perimetre, callback);
 	*/
 	socket.on('searchRoutes', function(points, perimeter, callback) {
-		// Recupération de tout les arrets à proximités des points de passege de l'itinéraire
-		for(var i=0; i<points.length; i++) {
-			arretModel.find({
-				'location': {
-					$nearSphere: {
-						$geometry: {
-							type : "Point",
-							coordinates : [ points[i].latitude, points[i].longitude ]
-						},
-						$minDistance: 0,
-						$maxDistance: distance
-					}
-				}
-			},  function(err, arretsDuPoint) {
-				if(!err) {
-					points[i].arrets = [];
-					points[i].arrets.push(arretsDuPoint);
-
-					// Récupération des lignes de chaque arrets
-					for(var k=0; k<arretsDuPoint.length; k++) {
-						arretLigneModel.find({'arretId':arretsDuPoint[i][k]._id}, function(err, lignesDeLArret) {
-							if(!err) {
-								points[i].arrets[k].lignes = [];
-								points[i].arrets[k].lignes.push(lignesDeLArret);
+		//J'ai pas testé.
+		async.series([
+			// Recupération de tout les arrets à proximités des points de passege de l'itinéraire
+			function (callbackFinRecupArret) {
+				for(var i=0; i<points.length; i++) {
+					arretModel.find({
+						'location': {
+							$nearSphere: {
+								$geometry: {
+									type : "Point",
+									coordinates : [ points[i].latitude, points[i].longitude ]
+								},
+								$minDistance: 0,
+								$maxDistance: distance
 							}
-							else
-								if(callback) callback(err, null);
-						});
-					}
+						}
+					},  function(err, arretsDuPoint) {
+						if(!err) {
+							points[i].arrets = [];
+							points[i].arrets.push(arretsDuPoint);
+
+							// Récupération des lignes de chaque arrets
+							for(var k=0; k<arretsDuPoint.length; k++) {
+								arretLigneModel.find({'arretId':arretsDuPoint[i][k]._id}, function(err, lignesDeLArret) {
+									if(!err) {
+										points[i].arrets[k].lignes = [];
+										points[i].arrets[k].lignes.push(lignesDeLArret);
+									}
+									else
+									callbackFinRecupArret(err, null);
+								});
+							}
+						}
+						else callbackFinRecupArret(err, null);
+					});
 				}
-				else
-					if(callback) callback(err, null);
+			},
+			function (callbackFinParcoursPoints) {
+				// APRES
+				// Parcours de tous les points
+				for(var i=0; i<points.length-1; i++) {
+					// Itinéraire possibles du point n au point n+1
+					var itineraires = [];
 
-			});
-		}
+					// Parcours des arrets du point n et n+1
+					for(var k1=0; k1<points[i].arrets.length; k1++) {
+						for(var k2=0; k2<points[i+1].arrets.length; k2++) {
 
-		// APRES
-		// Parcours de tous les points
-		for(var i=0; i<points.length-1; i++) {
-			// Itinéraire possibles du point n au point n+1
-			var itineraires = [];
-
-			// Parcours des arrets du point n et n+1
-			for(var k1=0; k1<points[i].arrets.length; k1++) {
-				for(var k2=0; k2<points[i+1].arrets.length; k2++) {
-
-					// Parcours des lignes des arrets du point n et n+1
-					for(var w1=0; w1<points[i].arrets[k1].length; w1++) {
-						for(var w2=0; w2<points[i].arrets[k2].length; w2++) {
-							if(points[i].arrets[k1].lignes[w1] == points[i+1].arrets[k2].lignes[k2]) {
-								itineraires[itineraires.length].ligne = points[i].arrets[k1].lignes[w1]._id;
-								itineraires[itineraires.length].arretDepart = points[i].arrets[k1]._id;
-								itineraires[itineraires.length].arretFin = points[i].arrets[k2]._id;
+							// Parcours des lignes des arrets du point n et n+1
+							for(var w1=0; w1<points[i].arrets[k1].length; w1++) {
+								for(var w2=0; w2<points[i].arrets[k2].length; w2++) {
+									if(points[i].arrets[k1].lignes[w1] == points[i+1].arrets[k2].lignes[k2]) {
+										itineraires[itineraires.length].ligne = points[i].arrets[k1].lignes[w1]._id;
+										itineraires[itineraires.length].arretDepart = points[i].arrets[k1]._id;
+										itineraires[itineraires.length].arretFin = points[i].arrets[k2]._id;
+									}
+								}
 							}
 						}
 					}
+					points[i] = itineraires;
 				}
+				callbackFinParcoursPoints(null, points);
 			}
-
-			points[i] = itineraires;
-		}
-
-		// APRES
-		if(callback) callback(null, points);
+		], callback); 	//Ici callback sera appelé avec en paramètre :
+						// (err, results) = (err, un tableau avec le contenu de points (et non points directement) donc soit tu laisse comme ca soit tu met :
+						/*
+							function (err, results) {
+								if (!err) callback(null, results[0]);
+								else callback(err, null);
+							}
+						 */
+						//Un exemple tout droit sortis de la doc - https://github.com/caolan/async#seriestasks-callback
+						/*
+							async.series([
+								function(callback){
+									// do some stuff ...
+									callback(null, 'one');
+								},
+								function(callback){
+									// do some more stuff ...
+									callback(null, 'two');
+								}
+							],
+							// optional callback
+							function(err, results){
+								// results is now equal to ['one', 'two']
+							});
+						*/
 	});
 });
