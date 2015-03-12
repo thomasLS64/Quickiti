@@ -6,7 +6,7 @@ var app = {
 		// Attachement des événements
 		this.bindEvents();
 		// Périmètre de recherche par défaut
-		this.perimeter = 10;
+		this.perimeter = 10000000;
 	},
 
 	// Fonction d'attachement des événements
@@ -69,13 +69,24 @@ var app = {
 					latitude: points.results[i].geometry.location.lat,
 					longitude: points.results[i].geometry.location.lng
 				}, app.perimeter], function(err, d) {
-					if(!err) console.log(d);
+					if(!err) {
+						for(var i=0; i<d.length; i++) {
+							app.map.addMarker({
+								latitude: d[i].location[0],
+								longitude: d[i].location[1],
+								message: '<strong>'+d[i].stop_name+'</strong><br />'+d[i].stop_desc
+							});
+						}
+
+						// Centrage de la carte sur le marker
+						app.map.centerMarkers();
+					}
 					else console.log(err);
 				});
+			
+				// Centrage de la carte sur le marker
+				app.map.centerMarkers();
 			}
-
-			// Centrage de la carte sur le marker
-			app.map.centerMarkers();
 		});
 	},
 
@@ -147,7 +158,10 @@ var app = {
 							suggestions.classList.remove('actif');
 						};
 
-						suggestions.appendChild(li);
+						if(i==0)
+							suggestions.appendChild(li);
+						else
+							suggestions.insertBefore(li, suggestions.firstChild);
 					}
 				});
 			}
