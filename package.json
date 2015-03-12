@@ -1,0 +1,30 @@
+{
+	"name": 		"Quickiti",
+	"version": 		"0.8.0",
+	"description": 	"Quickiti est une application dédiée aux transports en commun",
+	"contributors": [{
+		"name": "Benjamin Bordel"
+	}, {
+		"name": "Adrian Chauvel"
+	}, {
+		"name": "Thomas Le Sciellour"
+	}],
+	"repository": {
+		"type": "git",
+		"url": 	"https://github.com/thomasLS64/Quickiti"
+	},
+	"dependencies": {
+		"express":					"*",
+		"async":					"*",
+		"socket.io":				"*",
+		"socket.io-client": 		"*",
+		"mongoose":					"*",
+		"underscore":				"*",
+		"colors":					"*",
+		"csv":						"*",
+		"exec":						"*",
+		"gtfs-realtime-bindings":	"*",
+		"request":					"*",
+		"unzip":					"*"
+	}
+}

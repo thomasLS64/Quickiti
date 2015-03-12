@@ -5,6 +5,8 @@ var app = {
 		this.map = new QuickitiMap('map').initialize();
 		// Attachement des événements
 		this.bindEvents();
+		// Périmètre de recherche par défaut
+		this.perimeter = 10;
 	},
 
 	// Fonction d'attachement des événements
@@ -54,12 +56,21 @@ var app = {
 			// Remise à zéro des markers
 			app.map.clearMarkers();
 
-			// Ajout des nouveaux marker dans la listes des markers
 			for(var i=0; i<points.results.length; i++) {
+				// Ajout du marker sur la carte
 				app.map.addMarker({
 					latitude: points.results[i].geometry.location.lat,
 					longitude: points.results[i].geometry.location.lng,
 					message: points.results[i].formatted_address
+				});
+
+				// Demande des arrêts à proximités de ce dernier marker
+				socketServeurCentral.emit('request', 'stopsNearTo', [{
+					latitude: points.results[i].geometry.location.lat,
+					longitude: points.results[i].geometry.location.lng
+				}, app.perimeter], function(err, d) {
+					if(!err) console.log(d);
+					else console.log(err);
 				});
 			}
 

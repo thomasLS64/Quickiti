@@ -79,6 +79,7 @@ var vehiculeModel = mongoose.model('vehicule', vehiculeSchema);
 */
 // Nouvelle connexion de socket
 io.on('connection', function(socket) {
+	console.log('Client : connect');
 	/*
 	**	Compagnie de transport
 	**	----------------------
@@ -607,6 +608,8 @@ io.on('connection', function(socket) {
 				}
 			}
 		}, function(err, d) {
+			if(err) console.log(err);
+			else console.log(d);
 			if(callback) callback(err, d);
 		});
 	});
