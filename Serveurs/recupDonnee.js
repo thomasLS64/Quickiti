@@ -8,7 +8,7 @@ clientSockIo =  require('socket.io-client'), 	//Client vers le serveur de base d
 url =           require('url'), 				//gerer les url 
 path = 			require('path'), 
 exec = 			require('exec'), 				//supprimer les fichiers temporaires
-request = 		require('request'), 			//récuperer des fichiers extérieurs en HTTP
+request = 		require('request'), 			//récuperer des fichiers sur un serveur web
 unzip = 		require('unzip'), 				//dézipper les fichiers zip qu'on récupère
 csv = 			require('csv'), 				//traiter les fichiers GTFS
 GtfsRealtimeBindings = require('gtfs-realtime-bindings'), // GTFS RealTime
@@ -25,6 +25,7 @@ catch (err) {
 /* 
 	Client vers la base de donnée
 */
+
 
 clientGestBD = clientSockIo('http://localhost:7007/', { 
 												reconnection : 			true,  //Reconnexion automatique
@@ -73,7 +74,6 @@ clientGestBD.on('reconnect_error', function() {
 clientGestBD.on('reconnect_failed', function() { 
 	console.error("Reconnexion impossible.".red);
 });
-
 
 /*
 	Serveur de récupération de donnée

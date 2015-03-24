@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Quickiti - Inscription</title>
+        <link rel="stylesheet" href="css/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
+        <style>
+            a {text-decoration: none; color: black;}
+        </style>
+    </head>
+
+    <body class="container-fluid">
+        <header>
+
+            <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
+                <h1><div class="page-header">Inscription à Quickiti</div></h1>
+                 <% include ../partials/header.ejs %>
+            </div>
+        </header>
+        <main>
+            <div class="row">
+                <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
+                    <br />
+                    <div class="panel panel-default">
+                        <div class="panel-heading">Formulaire d'inscription</div>
+                        <div class="panel-body">
+                            <form action="/inscription/" method="post" class="form-horizontal">
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">Informations générales</div>
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label for="inputRS" class="col-sm-3 control-label">Raison Social :</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="inputRS">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputEmail" class="col-sm-3 control-label">Email de contact :</label>
+                                            <div class="col-sm-9">
+                                                <input type="email" class="form-control" id="inputEmail">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputPass" class="col-sm-3 control-label">Mot de passe :</label>
+                                            <div class="col-sm-9">
+                                                <input type="password" class="form-control" id="inputPass">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputAddr" class="col-sm-3 control-label">Adresse du siège :</label>
+                                            <div class="col-sm-9">
+                                                <input type="password" class="form-control" id="inputAddr">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputCP" class="col-sm-3 control-label">Code Postal :</label>
+                                            <div class="col-sm-9">
+                                                <input type="password" class="form-control" id="inputCP">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputCP" class="col-sm-3 control-label">Villes :</label>
+                                            <div class="col-sm-9">
+                                                <select id="inputVille" class="col-sm-12">
+                                                    <option>Villes</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="panel panel-default">
+                                    <div class="panel-heading">GTFS</div>
+                                    <div class="panel-body">
+                                        <div class="form-group">
+                                            <label for="inputRS" class="col-sm-3 control-label">Adresse du fichier zip contenant tous les fichiers GTFS :</label>
+                                            <div class="col-sm-9">
+                                                <input type="url" class="form-control" id="inputRS" placeholder="http://host/fichier.zip">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputUseGTFSRealTime" class="col-sm-3 control-label">Utiliser GTFS-Realtime :</label>
+                                            <div class="col-sm-9">
+                                                <input type="checkbox" class="form-control" id="inputUseGTFSRealTime">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputGTFSRealTime" class="col-sm-3 control-label">Adresse GTFS-Realtime:</label>
+                                            <div class="col-sm-9">
+                                                <input type="text" class="form-control" id="inputGTFSRealTime" placeholder="http://host/">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <button type="submit" class="pull-right btn btn-default">S'inscrire</button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </body>
+</html>
