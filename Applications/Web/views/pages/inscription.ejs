@@ -53,7 +53,7 @@
                                         <div class="form-group">
                                             <label for="inputAddr" class="col-sm-3 control-label">Adresse du siège :</label>
                                             <div class="col-sm-9">
-                                                <input type="password" class="form-control" id="inputAddr">
+                                                <input type="text" class="form-control" id="inputAddr">
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -150,6 +150,18 @@
                                                 </select>
                                             </div>
                                         </div>
+                                        <div class="form-group">
+                                            <label for="inputSite" class="col-sm-3 control-label">Site web de la compagnie :</label>
+                                            <div class="col-sm-9">
+                                                <input type="url" class="form-control" id="inputSite" placeholder="">
+                                            </div>
+                                        </div>
+                                        <div class="form-group">
+                                            <label for="inputTel" class="col-sm-3 control-label">Numéro de téléphone :</label>
+                                            <div class="col-sm-9">
+                                                <input type="tel" class="form-control" id="inputTel" placeholder="">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                                 <!-- Informations téchniques -->
@@ -157,9 +169,9 @@
                                     <div class="panel-heading">GTFS</div>
                                     <div class="panel-body">
                                         <div class="form-group">
-                                            <label for="inputRS" class="col-sm-3 control-label">Adresse du fichier zip contenant tous les fichiers GTFS :</label>
+                                            <label for="inputGTFSZipFile" class="col-sm-3 control-label">Adresse du fichier zip contenant tous les fichiers GTFS :</label>
                                             <div class="col-sm-9">
-                                                <input type="url" class="form-control" id="inputRS" placeholder="http://host/fichier.zip">
+                                                <input type="url" class="form-control" id="inputGTFSZipFile" placeholder="http://host/fichier.zip">
                                             </div>
                                         </div>
                                         <div class="form-group">
@@ -171,24 +183,24 @@
                                         <div class="form-group">
                                             <label for="inputGTFSRealTimeTripUpdate" class="col-sm-3 control-label">Adresse du fichiers "TripUpdates" : </label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="inputGTFSRealTimeTripUpdate" placeholder="http://host:port/TripUpdate.pb">
+                                                <input type="url" class="form-control" id="inputGTFSRealTimeTripUpdate" placeholder="http://host:port/TripUpdate.pb">
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <label for="inputGTFSRealTimeAlert" class="col-sm-3 control-label">Adresse du fichiers "Alert" : </label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="inputGTFSRealTimeAlert" placeholder="http://host:port/Alert.pb">
+                                                <input type="url" class="form-control" id="inputGTFSRealTimeAlert" placeholder="http://host:port/Alert.pb">
                                             </div>
                                         </div>
                                         <div class="form-group">
                                             <label for="inputGTFSRealVehiclePosition" class="col-sm-3 control-label">Adresse du fichiers "VehiclePosition" : </label>
                                             <div class="col-sm-9">
-                                                <input type="text" class="form-control" id="inputGTFSRealVehiclePosition" placeholder="http://host:port/VehiclePosition.pb">
+                                                <input type="url" class="form-control" id="inputGTFSRealVehiclePosition" placeholder="http://host:port/VehiclePosition.pb">
                                             </div>
                                         </div>
                                     </div>
                                 </div>
-                                <button type="submit" class="pull-right btn btn-default">S'inscrire</button>
+                                <button type="submit" id="submitInscription" class="pull-right btn btn-default">S'inscrire</button>
                                 <!-- Zone de retour pour l'utilisateur -->
                                 <div id="messageInfo" class="bg-info hidden">
 

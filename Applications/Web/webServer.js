@@ -12,7 +12,7 @@ var express = require('express'),
 */
 
 
-clientServeurCentral = clientSockIo('http://localhost:8008/', {
+clientServeurGestBD = clientSockIo('http://localhost:7007/', {
 	reconnection : 			true,  //Reconnexion automatique
 	reconnectionDelay : 	2000,  //Reconnexion toutes les 2 secondes
 	reconnectionDelayMax : 	100000 //Temps maximum passé à essayer de se reconnecter
@@ -22,42 +22,45 @@ clientServeurCentral = clientSockIo('http://localhost:8008/', {
  Evenement déclanché quand on est connecté au serveur central
  */
 
-clientServeurCentral.on('connect', function(){
-	console.info("[Serveur Central] ".magenta + "Connecté au serveur central.".green);
-	clientServeurCentral.connecte = true; //Variable qui indique l'état de la connexion au serveur
+clientServeurGestBD.on('connect', function(){
+	console.info("[Serveur BD] ".magenta + "Connecté au serveur de gestion de base de donnée.".green);
+	clientServeurGestBD.connecte = true; //Variable qui indique l'état de la connexion au serveur
 });
 
 /*
- Evenement déclanché quand on est déconnecté du serveur central
+ Evenement déclanché quand on est déconnecté du serveur de gestion de bd
  */
 
-clientServeurCentral.on('disconnect', function(){
-	console.error("[Serveur Central] ".magenta + "Déconnecté du serveur central.".red);
-	clientServeurCentral.connecte = false;
+clientServeurGestBD.on('disconnect', function(){
+	console.error("[Serveur BD] ".magenta + "Déconnecté du serveur central.".red);
+	clientServeurGestBD.connecte = false;
 });
 
 /*
- Evenement déclanché quand on tente de se reconnecter au serveur central
+ Evenement déclanché quand on tente de se reconnecter au serveur de gestion de bd
  */
 
-clientServeurCentral.on('reconnecting', function(n) {
-	console.info("[Serveur Central] ".magenta + "Reconnexion en cours (".yellow + n + ") ...".yellow);
+clientServeurGestBD.on('reconnecting', function(n) {
+	console.info("[Serveur BD] ".magenta + "Reconnexion en cours (".yellow + n + ") ...".yellow);
 });
 
 /*
- Evenement déclanché quand une tentative de reconnexion au serveur central a échoué
+ Evenement déclanché quand une tentative de reconnexion au serveur de gestion de bd a échoué
  */
 
-clientServeurCentral.on('reconnect_error', function() {
-	console.error("[Serveur Central]" + " Reconnexion échouée\n");
+clientServeurGestBD.on('reconnect_error', function() {
+	console.error("[Serveur BD]" + " Reconnexion échouée\n");
 });
 
 /*
- Evenement déclanché quand on a atteind la limite de temps passé à essayer de se reconnecter au serveur central
+ Evenement déclanché quand on a atteind la limite de temps passé à essayer de se reconnecter au serveur de gestion de bd
  */
 
-clientServeurCentral.on('reconnect_failed', function() {
-	console.error("[Serveur Central] Reconnexion au serveur central impossible.");
+clientServeurGestBD.on('reconnect_failed', function() {
+	console.error("[Serveur BD] Reconnexion au serveur de gestion de bd impossible.");
+});
+clientServeurGestBD.on('retourUtilisateur', function (mess, type, sockID) {
+	socketsWeb[sockID].emit('retourUtilisateur', mess, type);
 });
 
 server.listen(port, function() {
@@ -73,19 +76,17 @@ app.use(express.static(__dirname + '/public'))
 
 	});
 // Serveur de socket de l'application web
+
 io.on('connection', function(socket) {
 	console.log('[Serveur Web]'.cyan +' Nouveau client');
 	socket.on('request', function(requestType, request, callback) {
 		console.log('Requête client');
-		clientServeurCentral.emit('clientRequest', requestType, request, callback);
-		console.log("[Serveur Central]".magenta + "< Envoi d'une requête de type " + requestType + " ...");
+		clientServeurGestBD.emit('clientRequest', requestType, request, callback);
+		console.log("[Serveur BD]".magenta + "< Envoi d'une requête de type " + requestType + " ...");
 	});
 	socket.on('inscription', function (form, callback) {
 		console.log("Inscription en cours...");
-
-		callback("Validation du formulaire en cours...");
-		console.log(callback);
-		callback("to");
+		socket.emit("retourUtilisateur", "Validation du formulaire en cours...", "info");
 		//Tableaux qui contiendra les erreurs si on en trouve, il
 		//sera utilisé pour les afficher à l'utilisateur
 		var formErrors = [];
@@ -96,11 +97,11 @@ io.on('connection', function(socket) {
 			*/
 			if (typeof form.infoGenerales.adresse != "undefined") {
 
-				if (form.infoGenerales.adresse.length < 3 || form.infoGenerales.adresse.length > 30) {
+				if (!validator.isLength(form.infoGenerales.adresse, 3, 30)) {
 					formErrors.push("L'adresse est incorrect.");
 				}
 				else {
-					formProtege.infoGenerales.adresse =
+					form.infoGenerales.adresse =
 						validator.stripLow( //On retire les caractère avec un code numérique < 32 et > 127 (caractères de controles)
 							validator.escape( //On échappe les caractères de balisages en HTML (< > & " ')
 								form.infoGenerales.adresse
@@ -114,7 +115,7 @@ io.on('connection', function(socket) {
 			/*
 				Validation de la raison social
 			 */
-			if (typeof form.infoGenerales.raisSocial != "undefined" && (form.infoGenerales.raisSocial.length > 3 && form.infoGenerales.raisSocial.length < 30)) {
+			if (typeof form.infoGenerales.raisSocial != "undefined" && validator.isLength(form.infoGenerales.raisSocial, 3, 30)) {
 				form.infoGenerales.raisSocial =
 					validator.stripLow( //On retire les caractère avec un code numérique < 32 et > 127 (caractères de controles)
 						validator.escape( //On échappe les caractères de balisages en HTML (< > & " ')
@@ -163,6 +164,18 @@ io.on('connection', function(socket) {
 			else {
 				formErrors.push("La ville n'est pas définie, ou est incorrect.");
 			}
+			/*
+			 Validation du site web
+			 */
+			if (typeof form.infoGenerales.urlSiteWeb == "undefined" || !validator.isURL(form.infoGenerales.urlSiteWeb)) {
+				formErrors.push("L'url du site web n'est pas définie, ou est incorrect.");
+			}
+			/*
+			 Validation du téléphone
+			 */
+			if (typeof form.infoGenerales.telephone == "undefined" || !validator.matches(form.infoGenerales.telephone, '^\\+?[0-9]{9,11}$')) {
+				formErrors.push("Le numéro de téléphone n'est pas définie, ou est incorrect.");
+			}
 		}
 		else {
 			formErrors.push("Les informations générales ne sont pas définies.");
@@ -171,27 +184,35 @@ io.on('connection', function(socket) {
 			if (typeof form.gtfs.zipGTFS == "undefined" || !validator.isURL(form.gtfs.zipGTFS)) {
 				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.")
 			}
-			if (typeof form.gtfs.addrGTFSAlert == "undefined" || !validator.isURL(form.gtfs.addrGTFSAlert)) {
-				formErrors.push("L'adresse du fichier GTFSRealtime Alert est incorrect ou non définie.")
+			if (typeof form.gtfs.BoolUseRealTime != "undefined" && form.gtfs.BoolUseRealTime) {
+				if (typeof form.gtfs.addrGTFSAlert == "undefined" || !validator.isURL(form.gtfs.addrGTFSAlert)) {
+					formErrors.push("L'adresse du fichier GTFSRealtime Alert est incorrect ou non définie.")
+				}
+				if (typeof form.gtfs.addrGTFSTripUpdate == "undefined" || !validator.isURL(form.gtfs.addrGTFSTripUpdate)) {
+					formErrors.push("L'adresse du fichier GTFSRealtime Trip Update est incorrect ou non définie.")
+				}
+				if (typeof form.gtfs.addrGTFSVehiclePosition == "undefined" || !validator.isURL(form.gtfs.addrGTFSVehiclePosition)) {
+					formErrors.push("L'adresse du fichier GTFSRealtime Vehicle Position est incorrect ou non définie.")
+				}
 			}
-			if (typeof form.gtfs.addrGTFSTripUpdate == "undefined" || !validator.isURL(form.gtfs.addrGTFSTripUpdate)) {
-				formErrors.push("L'adresse du fichier GTFSRealtime Trip Update est incorrect ou non définie.")
-			}
-			if (typeof form.gtfs.addrGTFSVehiclePosition == "undefined" || !validator.isURL(form.gtfs.addrGTFSVehiclePosition)) {
-				formErrors.push("L'adresse du fichier GTFSRealtime Vehicle Position est incorrect ou non définie.")
+			else {
+				form.gtfs.addrGTFSVehiclePosition = "";
+				form.gtfs.addrGTFSTripUpdate = "";
+				form.gtfs.addrGTFSAlert = "";
+				form.gtfs.BoolUseRealTime = false;
 			}
 		}
 		else {
 			formErrors.push("Les informations GTFS ne sont pas définies.");
 		}
 		if (formErrors.length == 0) {
-			callback("Formulaire validé, envoi au serveur central...");
-			clientServeurCentral.emit('agencySubscribe', form, callback);
+			socket.emit("retourUtilisateur", "Formulaire validé, envoi au serveur de gestion de bd...", 'info');
+			clientServeurGestBD.emit('createAgency', form, callback);
 		}
 		else {
-			callback(formErrors);
+			socket.emit("retourUtilisateur", formErrors, "danger");
 			console.log("Formulaire invalide.");
-
+			callback();
 		}
 	});
 	socket.on('chercheCPVille', function (codePostal, pays, callback) {

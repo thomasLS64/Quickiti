@@ -1,11 +1,14 @@
 /*
     Fonction qui sera appellée pour afficher à l'utilisateur l'état de traitement du formulaire
 */
-function affMessage(message) {
+function affMessage(message, typeMessage) {
     console.log(message);
     var divMess = document.getElementById("messageInfo");
-    if (typeof message == "Array") {
-        message.forEach(function (item) {
+    console.log(typeof message);
+    if (typeof message == "object") {
+        divMess.innerHTML = "";
+        message.forEach(
+            function (item) {
                 var messDOM = document.createElement("div");
                 messDOM.innerHTML = item;
                 divMess.appendChild(messDOM);
@@ -15,11 +18,14 @@ function affMessage(message) {
     else {
         divMess.innerHTML = message;
     }
-    divMess.classList.remove("hidden");
+    divMess.className = "bg-"+typeMessage;
     return this;
 }
 //Connexion au serveur web
-socketWebServer = io("http://127.0.0.1:8080");
+socketWebServer = io("http://127.0.0.1:8080")
+    .on('retourUtilisateur', function (message, typeMessage) {
+           affMessage(message, typeMessage);
+       });
 //Evenement qui se déclanche quand la page est chargée
 document.addEventListener("DOMContentLoaded", function () {
     //Evenement qui se déclanche quand on valide le formulaire
@@ -28,27 +34,42 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
         //On informe l'utilisateur qu'on envoi le formulaire
         affMessage("Envoi du formulaire...");
-        console.log(this);
+
         //On créer un objet qui contient toutes les informations du formulaire
+        elementsForm = this.elements;
         var objForm = {
             infoGenerales: {
-                raisSocial: this.elements.inputRS.value,
-                email: this.elements.inputEmail.value,
-                motDePasse: this.elements.inputPass.value,
-                pays: this.elements.selectPays.value,
-                adresse: this.elements.inputAddr.value,
-                codePostal: this.elements.inputCP.value
+                raisSocial: elementsForm.inputRS.value,
+                email: elementsForm.inputEmail.value,
+                motDePasse: elementsForm.inputPass.value,
+                ville: elementsForm.selectVille.value,
+                pays: elementsForm.selectPays.value,
+                adresse: elementsForm.inputAddr.value,
+                codePostal: elementsForm.inputCP.value,
+                urlSiteWeb: elementsForm.inputSite.value,
+                telephone: elementsForm.inputTel.value
             },
             gtfs: {
-                zipGTFS: this.elements.inputRS.value,
-                BoolUseRealTime: this.elements.inputUseGTFSRealTime.checked,
-                addrGTFSTripUpdate: this.elements.inputGTFSRealTimeTripUpdate.value,
-                addrGTFSAlert: this.elements.inputGTFSRealTimeAlert.value,
-                addrGTFSVehiclePosition: this.elements.inputGTFSRealVehiclePosition.value
+                zipGTFS: elementsForm.inputGTFSZipFile.value,
+                BoolUseRealTime: elementsForm.inputUseGTFSRealTime.checked,
+                addrGTFSTripUpdate: elementsForm.inputGTFSRealTimeTripUpdate.value,
+                addrGTFSAlert: elementsForm.inputGTFSRealTimeAlert.value,
+                addrGTFSVehiclePosition: elementsForm.inputGTFSRealVehiclePosition.value
             }
         };
+        console.log(objForm);
         //On envoi l'objet au serveur web
-        socketWebServer.emit("inscription", objForm, affMessage);
+        elementsForm.namedItem("submitInscription").disabled = true;
+        socketWebServer.emit("inscription", objForm, function (isSuccess) {
+            elementsForm.namedItem("submitInscription").disabled = false;
+            console.log(isSuccess);
+            if (isSuccess) {
+                affMessage("Vous avez bien été enregistré, rendez vous dans l'onglet connexion pour vous connecter.", "success");
+            }
+            else {
+
+            }
+        });
     });
     //Évènement qui se déclanche quand on perd le focus du champs de code postale
     document.getElementById("inputCP").addEventListener('blur', function () {

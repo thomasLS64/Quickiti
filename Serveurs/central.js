@@ -154,10 +154,4 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
             if (callback) callback(err);
         }
     });
-    socket.on('agencySubscribe', function (form, callback) {
-        console.log("< Inscription d'une entreprise...")
-        callback('Envoi au serveur de récupération de données...');
-        console.log("Envoi de l'inscription vers le serveur de récupération de données...");
-        serveurRecuperationDonnees.emit('agencySubscribe', form, callback);
-    });
 });

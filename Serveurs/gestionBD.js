@@ -24,7 +24,11 @@ var compagnieSchema = new mongoose.Schema({
 	agency_phone : String,
 	agency_lang : String,
 	email : { type : String, match: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/ },
-	password : String
+	password : String,
+	urlGTFSFile : String,
+	urlGTFSTripUpdate : String,
+	urlGTFSAlert : String,
+	urlGTFSVehiclePosition : String
 });
 
 //	Schéma d'une ligne
@@ -63,7 +67,7 @@ var vehiculeSchema = new mongoose.Schema({
 	latitude : Number,
 	ligneId : Schema.ObjectId,
 	compagnieId : Schema.ObjectId,
-	date : { type : Date, default : Date.now },
+	date : { type : Date, default : Date.now }
 });
 
 // Création des modèles associés aux schémas
@@ -100,17 +104,20 @@ io.on('connection', function(socket) {
 	socket.on('createAgency', function(d, callback) {
 		// Initialisation de la nouvelle compagnie
 		var newAgency = new compagnieModel();
-
+		console.log("Inscription d'une compagnie...");
 		// Peuplement des différents champs
-		newAgency.agency_id = d.agency_id;
-		newAgency.agency_name = d.agency_name;
-		newAgency.agency_url = d.agency_url;
-		newAgency.agency_timezone = d.agency_timezone;
-		newAgency.agency_phone = d.agency_timezone;
-		newAgency.agency_lang = d.agency_lang;
-		newAgency.email = d.email;
-		newAgency.password = d.password;
-
+		newAgency.agency_id = 0; //Euh
+		newAgency.agency_name = d.infoGenerales.raisSocial;
+		newAgency.agency_url = d.infoGenerales.urlSiteWeb;
+		newAgency.agency_phone = d.infoGenerales.telephone;
+		newAgency.agency_lang = d.infoGenerales.pays; //À modifier
+		newAgency.email = d.infoGenerales.email;
+		newAgency.password = d.infoGenerales.motDePasse;
+		newAgency.urlGTFSFile = d.gtfs.zipGTFS;
+		newAgency.urlGTFSTripUpdate = d.gtfs.addrGTFSTripUpdate;
+		newAgency.urlGTFSAlert = d.gtfs.addrGTFSAlert;
+		newAgency.urlGTFSVehiclePosition = d.gtfs.addrGTFSVehiclePosition;
+		console.log("Sauvegarde de la compagnie...");
 		// Insertion en base de données
 		newAgency.save(function(err) {
 			if(err) {
