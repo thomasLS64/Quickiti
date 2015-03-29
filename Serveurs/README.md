@@ -212,7 +212,7 @@ var changement = {
     arretDebut : [Stop],
     arretFin : [Stop],
     ligne : [Line]
-}
+};
 ```
 
 ## Serveur de recuperation de donnee
