@@ -22,14 +22,14 @@ Ce serveur est dédié à l'interaction entre la base de donnée et les autres s
 #### Compagnie de transport
 ``` js
 var data = {
-    email : "...",
-    password : "...",
-    agency_id : "...",
-    agency_name : "...",
-    agency_url : "...",
-    agency_timezone : "...",
-    agency_phone : "...",
-    agency_lang : "..."
+    email : [String],
+    password : [String],
+    agency_id : [String],
+    agency_name : [String],
+    agency_url : [String],
+    agency_timezone : [String],
+    agency_phone : [String],
+    agency_lang : [String]
 };
 ```
 
@@ -55,15 +55,15 @@ socket.emit('selectAgencies', query, callback);
 #### Ligne
 ``` js
 var data = {
-    route_id : "...",
-    route_short_name : "...",
-    route_long_name : "...",
-    route_desc : "...",
-    route_type : "...",
-    service_id : "...",
-    trip_id : "...",
-    trip_headsign : "...",
-    compagnieId : "..."
+    route_id : [String],
+    route_short_name : [String],
+    route_long_name : [String],
+    route_desc : [String],
+    route_type : [String],
+    service_id : [String],
+    trip_id : [String],
+    trip_headsign : [String],
+    compagnieId : [ObjectId]
 };
 ```
 
@@ -90,14 +90,13 @@ socket.emit('selectLines', query, callback);
 #### Arrêt
 ``` js
 var data = {
-    stop_id : "...",
-    stop_name : "...",
-    stop_desc : "...",
-    stop_lat : "...",
-    stop_lon : "...",
-    stop_url : "...",
-    location_type : "...",
-    compagnieId : "..."
+    stop_id : [String],
+    stop_name : [String],
+    stop_desc : [String],
+    stop_url : [String],
+    location_type : [Number],
+    location : [Number, Number],
+    compagnieId : [ObjectId]
 };
 ```
 
@@ -124,8 +123,8 @@ socket.emit('selectStops', query, callback);
 #### Lien entre Arret et Ligne
 ``` js
 var data = {
-    arretId : "...",
-    ligneId : "..."
+    arretId : [ObjectId],
+    ligneId : [ObjectId]
 };
 ```
 
@@ -151,10 +150,11 @@ socket.emit('selectStopsLines', query, callback);
 #### Véhicule
 ``` js
 var data = {
-    longitude = "...",
-    latitude = "...",
-    ligneId = "...",
-    compagnieId = "..."
+    longitude : [Number],
+    latitude : [Number],
+    ligneId : [ObjectId],
+    compagnieId : [ObjectId],
+    date : [Date] 
 };
 ```
 
@@ -181,8 +181,8 @@ socket.emit('selectVehicles', query, callback);
 #### Récupération des arrets selon des coordonnées GPS et un périmètre
 ``` js
 var point = {
-    longitude = "...",
-    latitude = "..."
+    longitude : [Number],
+    latitude : [Number]
 };
 
 socket.emit('searchStopsNearTo', point, distance, callback);
