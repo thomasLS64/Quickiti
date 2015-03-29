@@ -195,6 +195,20 @@ socket.emit('searchRoutes', pointA, pointB, distance, callback);
 ```
 * `pointA` et `pointB` sont sur le meme modèle que `point`
 
+``` js
+var itineraires = {
+    changement[] = "...",
+    tempsReel = boolean
+};
+
+var changement = {
+    agency = agencyType,
+    arretDebut = stopType,
+    arretFin = stopType,
+    ligne = lineType
+}
+```
+
 
 Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
 
