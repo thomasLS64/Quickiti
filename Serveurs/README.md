@@ -19,7 +19,7 @@ Ce serveur est dédié à l'interaction entre les différentes applications clie
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
 ### Appels basiques
-#### Compagnie de transport
+#### Compagnie de transport [Agency]
 ``` js
 var data = {
     email : [String],
@@ -52,7 +52,7 @@ socket.emit('selectAgencies', query, callback);
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
-#### Ligne
+#### Ligne [Line]
 ``` js
 var data = {
     route_id : [String],
@@ -87,7 +87,7 @@ socket.emit('selectLines', query, callback);
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
 
-#### Arrêt
+#### Arrêt [Stop]
 ``` js
 var data = {
     stop_id : [String],
@@ -120,7 +120,7 @@ socket.emit('selectStops', query, callback);
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
 
-#### Lien entre Arret et Ligne
+#### Lien entre Arret et Ligne [StopLine]
 ``` js
 var data = {
     arretId : [ObjectId],
@@ -147,7 +147,7 @@ socket.emit('selectStopsLines', query, callback);
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
-#### Véhicule
+#### Véhicule [Vehicle]
 ``` js
 var data = {
     longitude : [Number],
@@ -200,18 +200,18 @@ Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/
 #### Itinéraire
 
 ``` js
-var itineraires [] = "...";
+var itineraires = [itineraire, ...];
 
 var itineraire = {
-    changement[] = "...",
-    tempsReel = boolean
+    changements : [changement, ...],
+    tempsReel : [Boolean]
 };
 
 var changement = {
-    agency = agencyType,
-    arretDebut = stopType,
-    arretFin = stopType,
-    ligne = lineType
+    agency : [Agency],
+    arretDebut : [Stop],
+    arretFin : [Stop],
+    ligne : [Line]
 }
 ```
 
