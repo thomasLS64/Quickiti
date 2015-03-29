@@ -196,7 +196,9 @@ socket.emit('searchRoutes', pointA, pointB, distance, callback);
 * `pointA` et `pointB` sont sur le meme modèle que `point`
 
 ``` js
-var itineraires = {
+var itineraires [] = "...";
+
+var itineraire = {
     changement[] = "...",
     tempsReel = boolean
 };
