@@ -19,17 +19,17 @@ Ce serveur est dédié à l'interaction entre les différentes applications clie
 Ce serveur est dédié à l'interaction entre la base de donnée et les autres serveurs du projet.
 
 ### Appels basiques
-#### Compagnie de transport
+#### Compagnie de transport [Agency]
 ``` js
 var data = {
-    email : "...",
-    password : "...",
-    agency_id : "...",
-    agency_name : "...",
-    agency_url : "...",
-    agency_timezone : "...",
-    agency_phone : "...",
-    agency_lang : "..."
+    email : [String],
+    password : [String],
+    agency_id : [String],
+    agency_name : [String],
+    agency_url : [String],
+    agency_timezone : [String],
+    agency_phone : [String],
+    agency_lang : [String]
 };
 ```
 
@@ -52,18 +52,18 @@ socket.emit('selectAgencies', query, callback);
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
-#### Ligne
+#### Ligne [Line]
 ``` js
 var data = {
-    route_id : "...",
-    route_short_name : "...",
-    route_long_name : "...",
-    route_desc : "...",
-    route_type : "...",
-    service_id : "...",
-    trip_id : "...",
-    trip_headsign : "...",
-    compagnieId : "..."
+    route_id : [String],
+    route_short_name : [String],
+    route_long_name : [String],
+    route_desc : [String],
+    route_type : [String],
+    service_id : [String],
+    trip_id : [String],
+    trip_headsign : [String],
+    compagnieId : [ObjectId]
 };
 ```
 
@@ -87,17 +87,16 @@ socket.emit('selectLines', query, callback);
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
 
-#### Arrêt
+#### Arrêt [Stop]
 ``` js
 var data = {
-    stop_id : "...",
-    stop_name : "...",
-    stop_desc : "...",
-    stop_lat : "...",
-    stop_lon : "...",
-    stop_url : "...",
-    location_type : "...",
-    compagnieId : "..."
+    stop_id : [String],
+    stop_name : [String],
+    stop_desc : [String],
+    stop_url : [String],
+    location_type : [Number],
+    location : [Number, Number],
+    compagnieId : [ObjectId]
 };
 ```
 
@@ -121,11 +120,11 @@ socket.emit('selectStops', query, callback);
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
 
-#### Lien entre Arret et Ligne
+#### Lien entre Arret et Ligne [StopLine]
 ``` js
 var data = {
-    arretId : "...",
-    ligneId : "..."
+    arretId : [ObjectId],
+    ligneId : [ObjectId]
 };
 ```
 
@@ -148,13 +147,14 @@ socket.emit('selectStopsLines', query, callback);
 * `query` est basé sur le même modèle que `data`
 * `callback` est une fonction exécutée lorsque la sélection est terminée
 
-#### Véhicule
+#### Véhicule [Vehicle]
 ``` js
 var data = {
-    longitude = "...",
-    latitude = "...",
-    ligneId = "...",
-    compagnieId = "..."
+    longitude : [Number],
+    latitude : [Number],
+    ligneId : [ObjectId],
+    compagnieId : [ObjectId],
+    date : [Date] 
 };
 ```
 
@@ -181,8 +181,8 @@ socket.emit('selectVehicles', query, callback);
 #### Récupération des arrets selon des coordonnées GPS et un périmètre
 ``` js
 var point = {
-    longitude = "...",
-    latitude = "..."
+    longitude : [Number],
+    latitude : [Number]
 };
 
 socket.emit('searchStopsNearTo', point, distance, callback);
@@ -195,9 +195,25 @@ socket.emit('searchRoutes', pointA, pointB, distance, callback);
 ```
 * `pointA` et `pointB` sont sur le meme modèle que `point`
 
-
 Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
 
+#### Itinéraire
+
+``` js
+var itineraires = [itineraire, ...];
+
+var itineraire = {
+    changements : [changement, ...],
+    tempsReel : [Boolean]
+};
+
+var changement = {
+    agency : [Agency],
+    arretDebut : [Stop],
+    arretFin : [Stop],
+    ligne : [Line]
+};
+```
 
 ## Serveur de recuperation de donnee
 Ce serveur est dédié à la récupération des données des différentes compagnies de transport.
