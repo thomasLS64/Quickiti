@@ -195,6 +195,10 @@ socket.emit('searchRoutes', pointA, pointB, distance, callback);
 ```
 * `pointA` et `pointB` sont sur le meme modèle que `point`
 
+Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
+
+#### Itinéraire
+
 ``` js
 var itineraires [] = "...";
 
@@ -210,10 +214,6 @@ var changement = {
     ligne = lineType
 }
 ```
-
-
-Voir des exemples d'utilisations dans le fichier [../Test/gestionBD.js](../Test/gestionBD.js)
-
 
 ## Serveur de recuperation de donnee
 Ce serveur est dédié à la récupération des données des différentes compagnies de transport.
