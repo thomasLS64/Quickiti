@@ -1,13 +1,64 @@
 var express = require('express'),
-	socketServeurCentral = require('socket.io-client')('http://localhost:8008/'),
+	clientSockIo= require('socket.io-client'),
 	app = express(),
+	color = require('colors'),
 	server = require('http').createServer(app),
 	io = require('socket.io')(server),
-	forms = require('forms'),
-	fields = forms.fields,
-	validators = forms.validators,
-	widgets = forms.widgets,
+	request = require('request'),
+	expressValidator = require('validator'),
 	port = 8080;
+/*
+ Client vers le serveur central
+*/
+
+
+clientServeurCentral = clientSockIo('http://localhost:8008/', {
+	reconnection : 			true,  //Reconnexion automatique
+	reconnectionDelay : 	2000,  //Reconnexion toutes les 2 secondes
+	reconnectionDelayMax : 	100000 //Temps maximum passé à essayer de se reconnecter
+});
+
+/*
+ Evenement déclanché quand on est connecté au serveur central
+ */
+
+clientServeurCentral.on('connect', function(){
+	console.info("[Serveur Central] ".magenta + "Connecté au serveur central.".green);
+	clientServeurCentral.connecte = true; //Variable qui indique l'état de la connexion au serveur
+});
+
+/*
+ Evenement déclanché quand on est déconnecté du serveur central
+ */
+
+clientServeurCentral.on('disconnect', function(){
+	console.error("[Serveur Central] ".purple + "Déconnecté du serveur central.".red);
+	clientServeurCentral.connecte = false;
+});
+
+/*
+ Evenement déclanché quand on tente de se reconnecter au serveur central
+ */
+
+clientServeurCentral.on('reconnecting', function(n) {
+	console.info("[Serveur Central] ".magenta + "Reconnexion en cours (".yellow + n + ") ...".yellow);
+});
+
+/*
+ Evenement déclanché quand une tentative de reconnexion au serveur central a échoué
+ */
+
+clientServeurCentral.on('reconnect_error', function() {
+	console.error("[Serveur Central] ".magenta + "Reconnexion échouée".red);
+});
+
+/*
+ Evenement déclanché quand on a atteind la limite de temps passé à essayer de se reconnecter au serveur central
+ */
+
+clientServeurCentral.on('reconnect_failed', function() {
+	console.error("[Serveur Central] ".magenta + "Reconnexion impossible.".red);
+});
 
 server.listen(port, function() {
 	console.log('Le serveur web écoute sur le port %d', port);
@@ -16,61 +67,56 @@ server.listen(port, function() {
 // Dossier contenant l'application web
 app.use(express.static(__dirname + '/public'))
 	.get('/inscription/', function (req, res) {
-		console.log(my_form.toHTML());
-		res.render('pages/inscription.ejs', { formulaireInscription: my_form });
+		res.render('pages/inscription.ejs');
 	})
+	.get('/espaceMembre/', function () {
 
-	.post('/inscription/', function(req, res) {
-		my_form.handle(req, {
-			success: function (form) {
-				// there is a request and the form is valid
-				// form.data contains the submitted data
-			},
-			error: function (form) {
-				// the data in the request didn't validate,
-				// calling form.toHTML() again will render the error messages
-			},
-			empty: function (form) {
-				// there was no form data in the request
-			}
-		});
 	});
 // Serveur de socket de l'application web
 io.on('connection', function(socket) {
 	console.log('Nouveau client');
 	socket.on('request', function(requestType, request, callback) {
 		console.log('Requête client');
-		socketServeurCentral.emit('clientRequest', requestType, request, callback);
+		clientServeurCentral.emit('clientRequest', requestType, request, callback);
+		console.log("[Serveur Central]".magenta + " Envoi d'une requête de type " + requestType + " ...");
+	});
+	socket.on('inscription', function (form, callback) {
+		console.log("Inscription en cours...");
+		callback("Validation du formulaire en cours...");
+		//Variable qui sera mis à false si une erreur est detecté dans le formulaire
+		var formOk = true;
+		//Objet qui contiendra le formulaire avec chaque informations protégées
+		//Contre un éventuel XSS
+		var formProtege = {};
+		//Tableaux qui contiendra les erreurs si on en trouve, il
+		//sera utilisé pour les afficher à l'utilisateur
+		var formErrors = [];
+
+		if (typeof form.infoGenerales != "undefined") {
+			formProtege.infoGenerales = {};
+			if (typeof form.infoGenerales.adresse != "undefined") {
+				if (form.infoGenerales.adresse.length < 3 || form.infoGenerales.adresse.length > 30) {
+
+				}
+			}
+		}
+		else {
+			formOk = false;
+		}
+		if (typeof form.gtfs != "undefined") {
+
+		}
+		else {
+			formOk = false;
+		}
+		callback("Envoi au serveur central...");
+		clientServeurCentral.emit('agencySubscribe', form);
+	});
+	socket.on('chercheCPVille', function (codePostal, pays, callback) {
+		request('http://api.zippopotam.us/' + pays.toLowerCase() + '/' + codePostal, function (error, response, body) {
+			if (!error) {
+				callback(JSON.parse(body));
+			}
+		});
 	});
 });
-var my_form = forms.create({
-	title: fields.string({
-		required: true,
-		widget: widgets.text({ classes: ['input-with-feedback'] }),
-		errorAfterField: true,
-		cssClasses: {
-			label: ['control-label col col-lg-3']
-		}
-	}),
-	description: fields.string({
-		errorAfterField: true,
-		widget: widgets.text({ classes: ['input-with-feedback'] }),
-		cssClasses: {
-			label: ['control-label col col-lg-3']
-		}
-	})
-});
-//Comptatibilité de la bibliotèque forms avec bootstrap
-var bootstrapField = function (name, object) {
-	object.widget.classes = object.widget.classes || [];
-	object.widget.classes.push('form-control');
-
-	var label = object.labelHTML(name);
-	var error = object.error ? '<div class="alert alert-error help-block">' + object.error + '</div>' : '';
-
-	var validationclass = object.value && !object.error ? 'has-success' : '';
-	validationclass = object.error ? 'has-error' : validationclass;
-
-	var widget = object.widget.toHTML(name, object);
-	return '<div class="form-group ' + validationclass + '">' + label + widget + error + '</div>';
-};

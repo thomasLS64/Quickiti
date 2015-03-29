@@ -65,7 +65,7 @@ var app = {
 				});
 
 				// Demande des arrêts à proximités de ce dernier marker
-				socketServeurCentral.emit('request', 'stopsNearTo', [{
+				socketWebServer.emit('request', 'stopsNearTo', [{
 					latitude: points.results[i].geometry.location.lat,
 					longitude: points.results[i].geometry.location.lng
 				}, app.perimeter], function(err, d) {
@@ -121,7 +121,12 @@ var app = {
 						message: pointArrive.results[i].formatted_address
 					});
 				}
-
+				socketWebServer.emit("request", 'route',
+					{ 	depart: pointDepart.results,
+						arrive: pointArrive.results }
+					, function (result) {
+					console.log(result);
+				});
 				// Centrage de la carte sur les markers
 				app.map.centerMarkers();
 			})

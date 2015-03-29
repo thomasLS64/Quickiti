@@ -42,13 +42,15 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
         if (requestType == 'route') {
             console.log('La requète demandé est un itinéraire, envoie de la recherche à la BD');
             // demande à la base de donnée de calculé l'itinéraire et les informations stocké correspondantes
+            serveurRecuperationDonnees.emit('searchRoutesRealTime', request, callback);
+            /*
             serverGestionBD.emit('searchRoute', request[0], request[1],
                 function (err, routes) {
                     if(!err) {
                         if(routes.length > 0) {
                             console.log('Le ou les itinéraires sont reçus');
 
-                            /*
+                            *
                              ** description des paramètres de la fonction:
                              ** serveurRecuperationDonnees.emit('searchRealTime',
                              **                                 {routes : routes},
@@ -61,7 +63,7 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                              ** var stopStartAgency = [ line1[..], line2[..], .. , lineN[..] ] // agence de l'arrêt de départ
                              ** var line = [ (time1, vehicul1[..]), (time2, vehicul1[..]), .. , (timeN} // avec (timeN-time1 < 5) heures par exemple
                              ** je sais pas trop comment intégrer les véhicule
-                             */
+                             *
 
                             // Demande des horaires en temps réel au serveur de récupération de données
                             serveurRecuperationDonnees.emit('searchRoutesRealTime',
@@ -77,7 +79,8 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                                         // horaires prévu par la compagnie
                                         if (callback) callback(err, routes);
                                     }
-                                });
+                                }
+                            );
                         }
                         else {
                             console.log('Aucun itinéraire n\'a été trouvé');
@@ -89,13 +92,15 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                         console.log('Erreur dans la récuperation de l\'itineraire');
                         if (callback) callback(err);
                     }
-                });
+                }
+            );*/
+
         }
         else if (requestType == 'stopsNearTo') {
             console.log('La requète demandée est une recherche sur un lieu, envoie de la recherche à la BD');
 
             // demande à la base de donnée de calculé les arrêts à proximités et les informations stocké correspondantes
-            serverGestionBD.emit('searchStopsNearTo', request[0], request[1],
+            /* serverGestionBD.emit('searchStopsNearTo', request[0], request[1],
                 function (err, stopsNearTo) {
                     if (!err) {
                         if(stopsNearTo.length > 0) {
@@ -112,7 +117,7 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                              ** var stopStartAgency = [ line1[..], line2[..], .. , lineN[..] ] // agence de l'arrêt de départ
                              ** var line = [ time1 , time2, .. , timeN] // avec (timeN-time1 < 5) heures par exemple
                              **
-                             */
+                             *
 
                             // Demande des horaires en temps réel au serveur de récupération de données pour les arrêts
                             serveurRecuperationDonnees.emit('searchStopsNearToRealTime',
@@ -140,12 +145,19 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                         console.log('Erreur dans la récuperation des arrêts');
                         if (callback) callback(err);
                     }
-                });
+                }
+            );*/
         }
         else {
             // le type de requete n'existe pas ou n'est pas encore implémenté
             console.log('La fonctionnalité  ' + requestType + '  n\'pas encore été développée');
             if (callback) callback(err);
         }
+    });
+    socket.on('agencySubscribe', function (form, callback) {
+        console.log("< Inscription d'une entreprise...")
+        callback('Envoi au serveur de récupération de données...');
+        console.log("Envoi de l'inscription vers le serveur de récupération de données...");
+        serveurRecuperationDonnees.emit('agencySubscribe', form, callback);
     });
 });

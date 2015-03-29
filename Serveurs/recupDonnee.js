@@ -105,22 +105,14 @@ io.on('connection', function (socket) {
 		on lit les données qu'on transforme pour les envoyer au serveur de gestion de la base de donnée
 
 	*/
-	socket.on('agencySubscribe', function (Agency, callback) {
+	socket.on('agencySubscribe', function (form, callback) {
 		if (!clientGestBD) { //Si on est pas connecté au SGBD, on renvoie une erreur.
 			callback({ error: "notConnectedToSGBD" });
 			return false;
 		}
 		console.log("------------------------------".bold);
-		console.log("Demande d'inscription de l'agence : " + Agency.name.grey);
-		console.log("Url GTFS : " + Agency.urlGTFS.grey);
-		console.log("Url Siri : " + Agency.urlSIRI.grey);
-		console.log("Url GTFSRealtime : " + Agency.urlGTFSRealtime.grey);
-		console.log("Email : " + Agency.email.grey);
-		console.log("Adresse : " + Agency.adress.grey);
+		console.log("Demande d'inscription de l'agence : " + form.raisSocial.grey);
 		console.log("------------------------------".bold);
-
-		//Préparation de la requête vers le sgbd :
-		var reponse = Agency;
 
 		// Enchainement asynchrone de fonctions
 		async.series({
@@ -133,8 +125,8 @@ io.on('connection', function (socket) {
 					downloadAndParseGTFS(Agency.name, Agency.urlGTFS, traitementGTFSTermine);
 				}
 			},
-			SIRI: function (traitementSIRITermine) {
-				traitementSIRITermine(null);
+			GTFSRealTime: function (traitementGTFSRealTimeTermine) {
+				traitementGTFSRealTimeTermine(null);
 			}
 		},
 		function (err, results) {
@@ -155,8 +147,8 @@ io.on('connection', function (socket) {
 	});
 	socket.on('searchRoutesRealTime', function (stops, callback) {
 		//Vérification de l'existance de données en temps réel 
-
-		//
+		console.log("Requête d'itinéraire en temps réel.");
+		callback("test");
 	});
 });
 function clearDirectory(directory, cb) {
@@ -253,7 +245,7 @@ function parseGTFS(directory, callback) {
 					agency_fare_url: 	{ required: false }, 	//Lien d'achat de ticket pour la compagnie
 					agency_timezone: 	{ required: false },
 					agency_phone: 		{ required: false },
-					agency_lang: 		{ required: false },
+					agency_lang: 		{ required: false }
 				}
 			},
 			{
@@ -268,7 +260,7 @@ function parseGTFS(directory, callback) {
 					stop_lat: 			{ required: true, type: "Float" },
 					stop_lon: 			{ required: true, type: "Float" },
 					stop_url: 			{ required: false },
-					location_type: 		{ required: true, type: "Int" },
+					location_type: 		{ required: true, type: "Int" }
 				}
 			},
 			{
@@ -281,7 +273,7 @@ function parseGTFS(directory, callback) {
 					route_short_name: 	{ required: true },
 					route_long_name: 	{ required: true },
 					route_desc: 		{ required: true },
-					route_type: 		{ required: true },
+					route_type: 		{ required: true }
 				}
 			},
 			{
@@ -293,8 +285,8 @@ function parseGTFS(directory, callback) {
 					route_id: 			{ required: true },
 					service_id: 		{ required: true },
 					trip_id: 			{ required: true },
-					trip_headsign: 		{ required: true },
-				},
+					trip_headsign: 		{ required: true }
+				}
 			},
 		];
 		var toReturn = {}; //Préparation de la réponse
@@ -440,6 +432,8 @@ function getGTFSRealtime(url, callback) {
 					console.log(entity.trip_update);
 				}
 			});
+			callback("ok");
 		}
 	});
 }
+getGTFSRealtime('http://googletransit.ridetarc.org/realtime/gtfs-realtime/TrapezeRealTimeFeed.pb', console.log);
