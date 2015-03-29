@@ -2,9 +2,21 @@
     Fonction qui sera appellée pour afficher à l'utilisateur l'état de traitement du formulaire
 */
 function affMessage(message) {
+    console.log(message);
     var divMess = document.getElementById("messageInfo");
+    if (typeof message == "Array") {
+        message.forEach(function (item) {
+                var messDOM = document.createElement("div");
+                messDOM.innerHTML = item;
+                divMess.appendChild(messDOM);
+            }
+        );
+    }
+    else {
+        divMess.innerHTML = message;
+    }
     divMess.classList.remove("hidden");
-    divMess.innerHTML = message;
+    return this;
 }
 //Connexion au serveur web
 socketWebServer = io("http://127.0.0.1:8080");
@@ -16,22 +28,23 @@ document.addEventListener("DOMContentLoaded", function () {
         event.preventDefault();
         //On informe l'utilisateur qu'on envoi le formulaire
         affMessage("Envoi du formulaire...");
+        console.log(this);
         //On créer un objet qui contient toutes les informations du formulaire
         var objForm = {
             infoGenerales: {
-                raisSocial: this.getElementById("inputRS").value,
-                email: this.getElementById("inputEmail").value,
-                motDePasse: this.getElementById("inputPass").value,
-                pays: this.getElementById('selectPays').value,
-                adresse: this.getElementById("inputAddr").value,
-                codePostal: this.getElementById('inputCP').value
+                raisSocial: this.elements.inputRS.value,
+                email: this.elements.inputEmail.value,
+                motDePasse: this.elements.inputPass.value,
+                pays: this.elements.selectPays.value,
+                adresse: this.elements.inputAddr.value,
+                codePostal: this.elements.inputCP.value
             },
             gtfs: {
-                zipGTFS: this.getElementById('inputRS').value,
-                BoolUseRealTime: this.getElementById('inputUseRealTime').checked,
-                addrGTFSTripUpdate: this.getElementById('inputGTFSRealTimeTripUpdate').value,
-                addrGTFSAlert: this.getElementById('inputGTFSRealTimeAlert').value,
-                addrGTFSVehiclePosition: this.getElementById('inputGTFSRealVehiclePosition').value
+                zipGTFS: this.elements.inputRS.value,
+                BoolUseRealTime: this.elements.inputUseGTFSRealTime.checked,
+                addrGTFSTripUpdate: this.elements.inputGTFSRealTimeTripUpdate.value,
+                addrGTFSAlert: this.elements.inputGTFSRealTimeAlert.value,
+                addrGTFSVehiclePosition: this.elements.inputGTFSRealVehiclePosition.value
             }
         };
         //On envoi l'objet au serveur web

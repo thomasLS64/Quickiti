@@ -26,6 +26,6 @@
 		"gtfs-realtime-bindings":	"*",
 		"request":					"*",
 		"unzip":					"*",
-		"validator":					"*"
+		"validator":				"*"
 	}
 }
