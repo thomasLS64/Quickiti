@@ -1,12 +1,13 @@
 <% include ../partials/header.ejs %>
+<script type="text/javascript" src="js/espaceMembre.js"></script>
 <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
     <br />
     <div class="panel panel-default">
         <div class="panel-heading">Informations</div>
         <div class="panel-body">
             <div class="row">
-                <div class="col-xs-5">
-                    <table class="table table-bordered">
+                <div class="col-xs-3">
+                    <table class="table table-bordered table-striped">
                         <tr>
                             <td>
                                 Arrêt
@@ -33,6 +34,21 @@
                         </tr>
                     </table>
                 </div>
+                <div class="col-xs-8 well">
+                    Fichier zip GTFS : <a href="<%= agency.urlGTFSFile %>"><%= agency.urlGTFSFile %></a><br />
+                    <% if (agency.urlGTFSAlert != "") { %>
+                    Fichiers GTFS RealTime : <br />
+                    <a href="<%= agency.urlGTFSAlert %>"><%= agency.urlGTFSAlert%></a> <br />
+                    <a href="<%= agency.urlGTFSTripUpdate %>"><%= agency.urlGTFSTripUpdate %></a> <br />
+                    <a href="<%= agency.urlGTFSVehiclePosition %>"><%= agency.urlGTFSVehiclePosition %></a> <br />
+                    <% } %>
+                </div>
+            </div>
+            <div class="row">
+                <button style="width: 100%; height: 100px;"><span style="font-size: 30px" class="glyphicon glyphicon-user"></span><br />Modifier ses informations</button>
+            </div>
+            <div class="row">
+                <button style="width: 100%; height: 100px;"><span style="font-size: 30px" class="glyphicon glyphicon-remove-circle"></span><br />Se désinscrire</button>
             </div>
         </div>
     </div>
