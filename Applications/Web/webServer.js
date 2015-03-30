@@ -1,5 +1,5 @@
 var express = require('express'),
-	clientSockIo= require('socket.io-client'),
+	clientSockIo = require('socket.io-client'),
 	app = express(),
 	color = require('colors'),
 	server = require('http').createServer(app),
@@ -57,6 +57,55 @@ clientServeurCentral.on('reconnect_failed', function() {
 	console.error("[Serveur BD] Reconnexion au serveur de gestion de bd impossible.");
 });
 clientServeurCentral.on('retourUtilisateur', function (mess, type, sockID) {
+	socketsWeb[sockID].emit('retourUtilisateur', mess, type);
+});
+
+/*
+ Client vers le serveur central
+*/
+clientServeurGestBD = clientSockIo('http://localhost:7007/', {
+	reconnection : 			true,  //Reconnexion automatique
+	reconnectionDelay : 	2000,  //Reconnexion toutes les 2 secondes
+	reconnectionDelayMax : 	100000 //Temps maximum passé à essayer de se reconnecter
+});
+
+/*
+ Evenement déclanché quand on est connecté au serveur central
+ */
+clientServeurGestBD.on('connect', function(){
+	console.info("[Serveur BD] ".magenta + "Connecté au serveur de gestion de base de donnée.".green);
+	clientServeurGestBD.connecte = true; //Variable qui indique l'état de la connexion au serveur
+});
+
+/*
+ Evenement déclanché quand on est déconnecté du serveur de gestion de bd
+ */
+clientServeurGestBD.on('disconnect', function(){
+	console.error("[Serveur BD] ".magenta + "Déconnecté du serveur central.".red);
+	clientServeurGestBD.connecte = false;
+});
+
+/*
+ Evenement déclanché quand on tente de se reconnecter au serveur de gestion de bd
+ */
+clientServeurGestBD.on('reconnecting', function(n) {
+	console.info("[Serveur BD] ".magenta + "Reconnexion en cours (".yellow + n + ") ...".yellow);
+});
+
+/*
+ Evenement déclanché quand une tentative de reconnexion au serveur de gestion de bd a échoué
+ */
+clientServeurGestBD.on('reconnect_error', function() {
+	console.error("[Serveur BD]" + " Reconnexion échouée\n");
+});
+
+/*
+ Evenement déclanché quand on a atteind la limite de temps passé à essayer de se reconnecter au serveur de gestion de bd
+ */
+clientServeurGestBD.on('reconnect_failed', function() {
+	console.error("[Serveur BD] Reconnexion au serveur de gestion de bd impossible.");
+});
+clientServeurGestBD.on('retourUtilisateur', function (mess, type, sockID) {
 	socketsWeb[sockID].emit('retourUtilisateur', mess, type);
 });
 
