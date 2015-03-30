@@ -9,6 +9,7 @@ var express = require('express'),
 	session = require('cookie-session'),
 	bodyParser = require('body-parser'),
 	validator = require('validator'),
+	async = require('async'),
 	port = 8080;
 
 /*
@@ -176,7 +177,46 @@ app.use(express.static(__dirname + '/public'))
 		}
 	})
 	.get('/espaceMembre', [requireLogin], function (req, res) {
-		res.render('pages/espaceMembre.ejs', { pageTitle: "Espace membre", pageHeader: "Espace membre", tabAct: "espmbr", agency: req.session.agency });
+		var nbrArret, nbrLigne, nbrArretLigne;
+		async.waterfall([
+				function (compteArretTermine) {
+					clientServeurGestBD.emit('selectStops',
+						{ compagnieId: req.session.agency._id },
+						compteArretTermine
+					);
+				},
+				function (arrets, compteLignesTermine) {
+					nbrArret = arrets.length;
+					clientServeurGestBD.emit('selectLines',
+						{ compagnieId: req.session.agency._id },
+						compteLignesTermine
+					);
+				},
+				function (lignes, compteArretLignesTermine) {
+					nbrLigne = lignes.length;
+					clientServeurGestBD.emit(
+						'selectStopsLines',
+						{ compagnieId: req.session.agency._id },
+						compteArretLignesTermine
+					);
+				}
+			],
+			function (err, arretsLignes) {
+				nbrArretLigne = arretsLignes.length;
+				res.render('pages/espaceMembre.ejs',
+					{
+						pageTitle: "Espace membre",
+						pageHeader: "Espace membre",
+						tabAct: "espmbr",
+						agency: req.session.agency,
+						nbrArret: nbrArret,
+						nbrLigne: nbrLigne,
+						nbrArretLigne: nbrArretLigne
+					}
+				);
+			}
+		);
+
 	})
 	.get('/deconnexion', [requireLogin], function(req, res) {
 		req.session = null;
