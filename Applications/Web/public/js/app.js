@@ -29,7 +29,7 @@ var app = {
 		// Attachement des événements
 		this.bindEvents();
 		// Périmètre de recherche par défaut
-		this.perimeter = 10000000;
+		this.perimeter = 5000;
 	},
 
 	// Fonction d'attachement des événements
@@ -92,8 +92,6 @@ var app = {
 					latitude: points.results[i].geometry.location.lat,
 					longitude: points.results[i].geometry.location.lng
 				}, app.perimeter], function(err, d) {
-					console.log(d);
-					console.log(err);
 					if(!err) {
 						if(d) {
 							for(var i=0; i<d.length; i++) {
@@ -107,7 +105,7 @@ var app = {
 							// Centrage de la carte sur le marker
 							app.map.centerMarkers();
 						}
-						else alert('Aucun arrêts n\'a été trouvé');
+						else alert('Aucun arrêt n\'a été trouvé');
 					}
 					else console.log(err);
 				});

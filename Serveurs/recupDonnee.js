@@ -180,6 +180,11 @@ io.on('connection', function (socket) {
 			}
 		});
 	});
+
+	socket.on('searchStopsNearToRealTime', function(stopsNearTo, callback) {
+		if(callback) callback(null, stopsNearTo);
+	});
+
 	socket.on('searchRoutesRealTime', function (stops, callback) {
 		//Vérification de l'existance de données en temps réel 
 		console.log("Requête d'itinéraire en temps réel.");
@@ -473,4 +478,4 @@ function getGTFSRealtime(url, callback) {
 		}
 	});
 }
-getGTFSRealtime('http://googletransit.ridetarc.org/realtime/gtfs-realtime/TrapezeRealTimeFeed.pb', console.log);
+//getGTFSRealtime('http://googletransit.ridetarc.org/realtime/gtfs-realtime/TrapezeRealTimeFeed.pb', console.log);
