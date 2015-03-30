@@ -125,33 +125,32 @@ var app = {
 
 		app.recupInformationsByAdress(nomDepart, function(pointDepart) {
 			app.recupInformationsByAdress(nomArrive, function(pointArrive) {
-				var nbResults = [pointDepart.results.length, pointArrive.results.length];
-
 				// Suppression des markers sur la carte
 				app.map.clearMarkers();
 
-				// Ajout des markers du point de départ à la carte
-				for(var i=0; i<nbResults[0]; i++) {
-					app.map.addMarker({
-						latitude: pointDepart.results[i].geometry.location.lat,
-						longitude: pointDepart.results[i].geometry.location.lng,
-						message: pointDepart.results[i].formatted_address
-					});
-				}
+				// Ajout du marker du point de départ à la carte
+				app.map.addMarker({
+					latitude: pointDepart.results[0].geometry.location.lat,
+					longitude: pointDepart.results[0].geometry.location.lng,
+					message: pointDepart.results[0].formatted_address
+				});
 
-				// Ajout des markers du point d'arrivé à la carte
-				for(var i=0; i<nbResults[1]; i++) {
-					app.map.addMarker({
-						latitude: pointArrive.results[i].geometry.location.lat,
-						longitude: pointArrive.results[i].geometry.location.lng,
-						message: pointArrive.results[i].formatted_address
-					});
-				}
-				socketWebServer.emit("request", 'route',
-					{ 	depart: pointDepart.results,
-						arrive: pointArrive.results }
-					, function (result) {
-					console.log(result);
+				// Ajout du marker du point d'arrivé à la carte
+				app.map.addMarker({
+					latitude: pointArrive.results[0].geometry.location.lat,
+					longitude: pointArrive.results[0].geometry.location.lng,
+					message: pointArrive.results[0].formatted_address
+				});
+
+				socketWebServer.emit("request", 'route', [[{
+						latitude: pointDepart.results[0].geometry.location.lat,
+						longitude: pointDepart.results[0].geometry.location.lng
+					}, {
+						latitude: pointArrive.results[0].geometry.location.lat,
+						longitude: pointArrive.results[0].geometry.location.lng
+					}], app.perimeter],
+					function (err, d) {
+						console.log(d);
 				});
 				// Centrage de la carte sur les markers
 				app.map.centerMarkers();
