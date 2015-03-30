@@ -266,12 +266,11 @@ io.on('connection', function(socket) {
 		newLine.save(function(err) {
 			if(err) {
 				console.log('Database Line creation : false');
-				if(callback) callback(false);
 			}
 			else {
 				console.log('Database Line creation : true');
-				if(callback) callback(true);
 			}
+			if(callback) callback(err);
 		});
 	});
 

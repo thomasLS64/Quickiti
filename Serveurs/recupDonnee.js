@@ -142,6 +142,7 @@ io.on('connection', function (socket) {
 						}
 					});
 				},
+				//MISE A JOUR / INSERTION DES ARRÊTS
 				function (GTFS, updateBDStopsTermine) {
 					console.log("Mise à jour de l'agence terminée.");
 					console.log("Mise à jour des arrêts...");
@@ -200,6 +201,7 @@ io.on('connection', function (socket) {
 						}
 					);
 				},
+				//MISE A JOUR / INSERTION DES LIGNES
 				function (GTFS, updateBDLineTermine) {
 					console.log("Mise à jour des arrêts terminée.");
 					console.log("Mise à jour des lignes...");
@@ -254,8 +256,133 @@ io.on('connection', function (socket) {
 						}
 					);
 				},
-				function (traitementGTFSRealTimeTermine) {
-					console.log("Mise à jour des lignes OK");
+				//MISE A JOUR / INSERTION DES TRAJETS
+				function (GTFS, updateBDTripTermine) {
+					console.log("Mise à jour des lignes terminée.");
+					console.log("Mise à jour des trajets...");
+					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
+					//En limitant à 3 en même temps pour ne pas flooder la bdd
+					async.eachLimit(GTFS.trajet, 3,
+						function (trajet, trajetTermine) {
+							console.log("Insertion de " + trajet.trip_id);
+
+
+							/* Dans l'ordre :
+							 On vérifie si l'arrêt existe déjà
+							 Si il existe, on le met à jour
+							 Sinon, on le créer
+							 */
+							async.waterfall([
+									function (verifTrajetExisteTermine) { //On vérifie si l'arrêt existe déjà
+										clientGestBD.emit(
+											'selectLines',  //On sélectionne les lignes
+											//Qui correspondent à ces critères
+											{ route_id: trajet.trip_id, compagnieId: agencyId },
+											verifTrajetExisteTermine // Callback
+										);
+									},
+									function (result, traitementTrajetOk) {
+										var newTrip = {};
+										for (attr in trajet) {
+											newTrip[attr] = trajet[attr];
+										}
+										newTrip.compagnieId = agencyId;
+										if (result.length == 0) { //Si l'arrêt n'existe pas
+											//On le créer
+											clientGestBD.emit('createLine', newTrip, function (err) {
+												console.log("Trajet " + newTrip.trip_id + " créer." + err);
+												traitementTrajetOk(err);
+											});
+										}
+										else {
+											clientGestBD.emit('updateLine', { _id: result[0]._id }, newTrip, function (err) {
+												console.log("Trajet " + newTrip.trip_id + " mis à jour.");
+												traitementTrajetOk(err);
+											});
+										}
+									}
+								],
+								trajetTermine // ON termine le traitement du trajet
+							);
+						},
+						function (err) {
+							console.log("Traitement des trajets terminé.");
+							updateBDTripTermine(err, GTFS);
+						}
+					);
+				},
+				function (GTFS, updateBDStopLineTermine) {
+					console.log("Mise à jour des trajets terminée.");
+					console.log("Mise à jour des correspondances arrêts / ligne...");
+					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
+					//En limitant à 3 en même temps pour ne pas flooder la bdd
+					async.eachLimit(GTFS.arretLigne, 3,
+						function (arretLigne, arretLigneTermine) {
+							console.log("Insertion de la correspondance " + arretLigne.trip_id + "/" + arretLigne.stop_id);
+							/* Dans l'ordre :
+							 On vérifie si l'arrêt existe déjà
+							 Si il existe, on le met à jour
+							 Sinon, on le créer
+							 */
+							async.waterfall([
+									//On récupére l'arret et la ligne
+									function (recupLigneTermine) {
+										clientGestBD.emit('selectLines', { compagnieId: agencyId, trip_id: arretLigne.trip_id },
+											recupLigneTermine
+										);
+									},
+									function (ligne, recupArretTermine) {
+										clientGestBD.emit('selectStops', { compagnieId: agencyId, stop_id: arretLigne.stop_id },
+											function (err, arrets) {
+												recupArretTermine(err, ligne[0], arrets[0]);
+											}
+										);
+									},
+									function (ligne, arret, verifArretLigneExisteTermine) { //On vérifie si la correspondance existe déjà
+										clientGestBD.emit(
+											'selectStopsLines',  //On sélectionne les corr ligne/arrets
+											//Qui correspondent à ces critères
+											{ route_id: arretLigne.trip_id, arretId: arret._id, ligneId: ligne._id },
+											function (err, arretLigneTrouve) {
+												verifArretLigneExisteTermine(err, ligne, arret, arretLigneTrouve); // Callback
+											}
+										);
+									},
+									function (ligne, arret, result, traitementArretLigneOk) {
+										var newArretLigne = {};
+										for (attr in arretLigne) {
+											if (attr != "trip_id" && attr != "stop_id")
+												newArretLigne[attr] = arretLigne[attr];
+										}
+										newArretLigne.arretId = arret._id;
+										newArretLigne.ligneId = ligne._id;
+										newArretLigne.compagnieId = agencyId;
+										if (result.length == 0) { //Si la correspondance n'existe pas
+											//On le créer
+											clientGestBD.emit('createStopLine', newArretLigne, function (err) {
+												console.log("Correspondance " + newArretLigne.arretId + " créer.");
+												traitementArretLigneOk(err);
+											});
+										}
+										else {
+											clientGestBD.emit('updateLine', { _id: result[0]._id }, newArretLigne, function (err) {
+												console.log("Trajet " + newArretLigne.trip_id + " mis à jour.");
+												traitementArretLigneOk(err);
+											});
+										}
+									}
+								],
+								arretLigneTermine // ON termine le traitement du trajet
+							);
+						},
+						function (err) {
+							console.log("Traitement des lignes / arrêts terminé.");
+							updateBDStopLineTermine(err, GTFS);
+						}
+					);
+				},
+				function (GTFS, traitementGTFSRealTimeTermine) {
+					console.log("Mise à jour des lignes / arrêts OK");
 					traitementGTFSRealTimeTermine(null);
 				}
 		],
@@ -408,7 +535,7 @@ function parseGTFS(directory, callback) {
 			{
 				fileName: 'trips.txt',
 				required: true,
-				internalName: "ligne",
+				internalName: "trajet",
 				// internalId: "route_id",
 				attributes: {
 					route_id: 				{ required: true },
