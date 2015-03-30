@@ -161,7 +161,7 @@ io.on('connection', function(socket) {
 			*/
 			if (typeof form.infoGenerales.adresse != "undefined") {
 
-				if (!validator.isLength(form.infoGenerales.adresse, 3, 30)) {
+				if (!validator.isLength(form.infoGenerales.adresse, 3, 60)) {
 					formErrors.push("L'adresse est incorrect.");
 				}
 				else {
@@ -179,7 +179,7 @@ io.on('connection', function(socket) {
 			/*
 				Validation de la raison social
 			 */
-			if (typeof form.infoGenerales.raisSocial != "undefined" && validator.isLength(form.infoGenerales.raisSocial, 3, 30)) {
+			if (typeof form.infoGenerales.raisSocial != "undefined" && validator.isLength(form.infoGenerales.raisSocial, 3, 60)) {
 				form.infoGenerales.raisSocial =
 					validator.stripLow( //On retire les caractère avec un code numérique < 32 et > 127 (caractères de controles)
 						validator.escape( //On échappe les caractères de balisages en HTML (< > & " ')
@@ -211,13 +211,13 @@ io.on('connection', function(socket) {
 			/*
 			 	Validation du code postal
 			*/
-			if (typeof form.infoGenerales.codePostal == "undefined" || form.infoGenerales.codePostal.length > 6 || !validator.isNumeric(form.infoGenerales.codePostal)) {
+			if (typeof form.infoGenerales.codePostal == "undefined" || form.infoGenerales.codePostal.length > 6) {
 				formErrors.push("Le code postal n'est pas définie, ou est incorrect.");
 			}
 			/*
 			 	Validation de la ville
 			*/
-			if (typeof form.infoGenerales.ville != "undefined" && form.infoGenerales.ville.length < 20) {
+			if (typeof form.infoGenerales.ville != "undefined" && form.infoGenerales.ville.length < 60) {
 				form.infoGenerales.ville =
 					validator.stripLow( //On retire les caractère avec un code numérique < 32 et > 127 (caractères de controles)
 						validator.escape( //On échappe les caractères de balisages en HTML (< > & " ')
@@ -285,5 +285,10 @@ io.on('connection', function(socket) {
 				callback(JSON.parse(body));
 			}
 		});
+	});
+	socket.on("updateGTFS", function (idAgency, callback) {
+		clientServeurRecupDonnee = clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback);
+
+
 	});
 });

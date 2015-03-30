@@ -28,7 +28,7 @@ socketWebServer = io("http://127.0.0.1:8080")
        });
 //Evenement qui se déclanche quand la page est chargée
 document.addEventListener("DOMContentLoaded", function () {
-    if (typeof document.getElementById("formInscription") != "undefined") {
+    if (document.getElementById("formInscription")) {
         //Evenement qui se déclanche quand on valide le formulaire
         document.getElementById("formInscription").addEventListener("submit", function (event) {
             //On arrête la propagation de l'evenement de l'envoi du formulaire et on empèche le navigateur d'agir
@@ -97,5 +97,20 @@ document.addEventListener("DOMContentLoaded", function () {
             });
         });
     }
-    if (typeof document.getElementById("formInscription") != "undefined") {
+    if (document.getElementById("updateGTFS")) {
+        document.getElementById("updateGTFS").addEventListener('click', function () {
+            this.innerHTML = "Mise à jour en cours...";
+            this.disabled = true;
+            var that = this;
+            socketWebServer.emit('updateGTFS', this.dataset.idagency, function (isSuccess) {
+                console.log("Mise à jour OK");
+                if (isSuccess) {
+                    that.innerHTML = "Mise à jour terminée.";
+                }
+                else {
+                    that.innerHTML = "Echec de la mise à jour.";
+                }
+            })
+        });
+    }
 });
