@@ -468,6 +468,13 @@ io.on('connection', function(socket) {
 		// Peuplement des différents champs
 		newStopLine.arretId = d.arretId;
 		newStopLine.ligneId = d.ligneId;
+		newStopLine.arrival_time = d.arrival_time;
+		newStopLine.departure_time = d.departure_time;
+		newStopLine.stop_sequence = d.stop_sequence;
+		newStopLine.pickup_type = d.pickup_type;
+		newStopLine.drop_off_type = d.drop_off_type;
+		newStopLine.timepoint = d.timepoint;
+		newStopLine.compagnieId = d.compagnieId;
 
 		// Insertion en base de données
 		newStopLine.save(function(err) {
