@@ -622,6 +622,7 @@ io.on('connection', function(socket) {
 	**		socket.emit('searchStopsNearTo', point, distance, callback);
 	*/
 	socket.on('searchStopsNearTo', function(point, distance, callback) {
+		console.log('Request')
 		arretModel.find({
 			'location': {
 				$nearSphere: {
@@ -634,8 +635,6 @@ io.on('connection', function(socket) {
 				}
 			}
 		}, function(err, d) {
-			if(err) console.log(err);
-			else console.log(d);
 			if(callback) callback(err, d);
 		});
 	});

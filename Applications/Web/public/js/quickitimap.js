@@ -44,7 +44,7 @@ QuickitiMap.prototype = {
 		L.tileLayer('http://otile{s}.mqcdn.com/tiles/1.0.0/map/{z}/{x}/{y}.jpg', {
 			subdomains: '1234' // Sous-domaines utilisés pour la récupération des images de la map (par défaut "abcd")
 		}).addTo(this.map);
-	
+
 		return this;
 	},
 	

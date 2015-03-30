@@ -100,7 +100,7 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
             console.log('La requète demandée est une recherche sur un lieu, envoie de la recherche à la BD');
 
             // demande à la base de donnée de calculé les arrêts à proximités et les informations stocké correspondantes
-            /* serverGestionBD.emit('searchStopsNearTo', request[0], request[1],
+            serverGestionBD.emit('searchStopsNearTo', request[0], request[1],
                 function (err, stopsNearTo) {
                     if (!err) {
                         if(stopsNearTo.length > 0) {
@@ -117,16 +117,15 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                              ** var stopStartAgency = [ line1[..], line2[..], .. , lineN[..] ] // agence de l'arrêt de départ
                              ** var line = [ time1 , time2, .. , timeN] // avec (timeN-time1 < 5) heures par exemple
                              **
-                             *
+                             */
 
                             // Demande des horaires en temps réel au serveur de récupération de données pour les arrêts
-                            serveurRecuperationDonnees.emit('searchStopsNearToRealTime',
-                                stopsNearTo,
+                            serveurRecuperationDonnees.emit('searchStopsNearToRealTime', stopsNearTo,
                                 function (err, stopsNearToRealTime) {
                                     if(!err) {
                                         console.log('Le temps réel est obtenu ou partiellement, callback des arrêts reçus par le serveur de récupération de données');
                                         // horaires obtenu en temps réel ou partiellement en temps réel
-                                        if (callback) callback(err, stopsNearToRealTime);
+                                        if (callback) callback(null, stopsNearToRealTime);
                                     }
                                     else {
                                         console.log('Pas de temps réel, callback des arrêts reçus par le SGBD');
@@ -137,21 +136,21 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                         }
                         else {
                             console.log('Aucun arrêt n\'a été trouvé');
-                            if(callback) callback(err, stopsNearTo);
+                            if(callback) callback(err, null);
                         }
                     }
                     else {
-                        // il y a eu une erreur dans
+                        // il y a eu une erreur dans la récupération des arrêts
                         console.log('Erreur dans la récuperation des arrêts');
-                        if (callback) callback(err);
+                        if (callback) callback(err, null);
                     }
                 }
-            );*/
+            );
         }
         else {
             // le type de requete n'existe pas ou n'est pas encore implémenté
             console.log('La fonctionnalité  ' + requestType + '  n\'pas encore été développée');
-            if (callback) callback(err);
+            if (callback) callback(err, null);
         }
     });
 });
