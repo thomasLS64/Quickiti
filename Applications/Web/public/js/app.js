@@ -2,7 +2,30 @@ var app = {
 	// Fonction d'initialisation de l'application
 	initialize : function() {
 		// Création de la carte
-		this.map = new QuickitiMap('map').initialize();
+		this.map = new QuickitiMap('map');
+
+		this.map
+			.initialize()
+			.geolocate(function(err, result) {
+				// Position de l'utilisateur trouvée
+				if(!err) {
+					// Ajout du marker de position
+					app.map
+						.addMarker({
+							latitude: result.coords.latitude,
+							longitude: result.coords.longitude,
+							message: "Vous êtes ici"})
+						.centerMarkers();
+				}
+				
+				// Position de l'utilisateur introuvable
+				else {
+					// Affichage du message d'erreur
+					alert("Votre position géographique ne peut être trouvée");
+					console.log(err);
+				}
+			});
+
 		// Attachement des événements
 		this.bindEvents();
 		// Périmètre de recherche par défaut
