@@ -26,6 +26,11 @@
 		"gtfs-realtime-bindings":	"*",
 		"request":					"*",
 		"unzip":					"*",
-		"validator":				"*"
+		"validator":				"*",
+		"mongoose-bcrypt":			"*",
+		"cookie-parser":			"*",
+		"cookie-session":			"*",
+		"body-parser":				"*",
+		"ejs":						"*"
 	}
 }
