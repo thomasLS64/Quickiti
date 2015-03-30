@@ -1,6 +1,9 @@
 var app = {
 	// Fonction d'initialisation de l'application
 	initialize : function() {
+		// Périmètre de recherche par défaut
+		this.perimeter = 100;
+		
 		// Création de la carte
 		this.map = new QuickitiMap('map');
 
@@ -16,6 +19,26 @@ var app = {
 							longitude: result.coords.longitude,
 							message: "Vous êtes ici"})
 						.centerMarkers();
+
+					// Demande des arrêts à proximités
+					socketWebServer.emit('request', 'stopsNearTo', [{
+						latitude: result.coords.latitude,
+						longitude: result.coords.longitude
+					}, app.perimeter], function(err, d) {
+						if(!err) {
+							if(d) {
+								for(var i=0; i<d.length; i++) {
+									app.map.addMarker({
+										latitude: d[i].location[0],
+										longitude: d[i].location[1],
+										message: '<strong>'+d[i].stop_name+'</strong>'
+									});
+								}
+								app.map.centerMarkers();
+							}
+						}
+						else console.log(err);
+					});
 				}
 				
 				// Position de l'utilisateur introuvable
@@ -28,8 +51,6 @@ var app = {
 
 		// Attachement des événements
 		this.bindEvents();
-		// Périmètre de recherche par défaut
-		this.perimeter = 5000;
 	},
 
 	// Fonction d'attachement des événements
@@ -86,6 +107,7 @@ var app = {
 					longitude: points.results[i].geometry.location.lng,
 					message: points.results[i].formatted_address
 				});
+				app.map.centerMarkers();
 
 				// Demande des arrêts à proximités de ce dernier marker
 				socketWebServer.emit('request', 'stopsNearTo', [{
@@ -98,20 +120,15 @@ var app = {
 								app.map.addMarker({
 									latitude: d[i].location[0],
 									longitude: d[i].location[1],
-									message: '<strong>'+d[i].stop_name+'</strong><br />'+d[i].stop_desc
+									message: '<strong>'+d[i].stop_name+'</strong>'
 								});
 							}
-
-							// Centrage de la carte sur le marker
 							app.map.centerMarkers();
 						}
 						else alert('Aucun arrêt n\'a été trouvé');
 					}
 					else console.log(err);
 				});
-			
-				// Centrage de la carte sur le marker
-				app.map.centerMarkers();
 			}
 		});
 	},
