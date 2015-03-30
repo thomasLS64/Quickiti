@@ -125,16 +125,14 @@ io.on('connection', function (socket) {
 				},
 				function (GTFS, updateBDAgencyTermine) {
 					console.log(GTFS);
-					for (a in GTFS.compagnie) {
-						var agency_id = a;
-					}
 					console.log("Mise à jour de l'agence...");
+					var agency = GTFS.compagnie[0];
 					clientGestBD.emit('updateAgency', {
 						_id: agencyId
 					},  {
-						agency_id: agency_id,
-						agency_timezone: GTFS.compagnie[agency_id].agency_timezone,
-						agency_lang: GTFS.compagnie[agency_id].agency_lang
+						agency_id: agency.agency_id,
+						agency_timezone: agency.agency_timezone,
+						agency_lang: agency.agency_lang
 					}, function (isSuccess) {
 						if (isSuccess) {
 							updateBDAgencyTermine(null, GTFS);
@@ -146,27 +144,118 @@ io.on('connection', function (socket) {
 				},
 				function (GTFS, updateBDStopsTermine) {
 					console.log("Mise à jour de l'agence terminée.");
-					for (stop in GTFS.arret) {
-						console.log("Insertion de " + stop);
-						newStop = {};
-						newStop.stop_id = GTFS.arret[stop].stop_id;
-						newStop.stop_name = GTFS.arret[stop].stop_name;
-						newStop.stop_desc = GTFS.arret[stop].stop_desc;
-						newStop.stop_url = GTFS.arret[stop].stop_url;
-						newStop.location_type = GTFS.arret[stop].location_type;
-						newStop.stop_lat = GTFS.arret[stop].stop_lat;
-						newStop.stop_lon = GTFS.arret[stop].stop_lon;
-						newStop.compagnieId = agencyId;
-						clientGestBD.emit('createStop', newStop, function (err) {
-							if (err) {
-								console.log(err);
-							}
-						});
-					}
-					updateBDStopsTermine(null);
+					console.log("Mise à jour des arrêts...");
+					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
+					//En limitant à 3 en même temps pour ne pas flooder la bdd
+					async.eachLimit(GTFS.arret, 1,
+						function (stop, arretTermine) {
+							console.log("Insertion de " + stop.stop_id);
+							var newStop = {};
+							newStop.stop_id = stop.stop_id;
+							newStop.stop_name = stop.stop_name;
+							newStop.stop_desc = stop.stop_desc;
+							newStop.stop_url = stop.stop_url;
+							newStop.location_type = stop.location_type;
+							newStop.stop_lat = stop.stop_lat;
+							newStop.stop_lon = stop.stop_lon;
+							newStop.compagnieId = agencyId;
+							/* Dans l'ordre :
+								On vérifie si l'arrêt existe déjà
+								Si il existe, on le met à jour
+								Sinon, on le créer
+							 */
+							async.waterfall([
+									function (verifArretExisteTermine) { //On vérifie si l'arrêt existe déjà
+										clientGestBD.emit(
+											'selectStops',  //On sélectionne les arrêts
+											{ stop_id: stop.stop_id, compagnieId: agencyId }, //Qui correspondent à ces critères
+											verifArretExisteTermine // Callback
+										);
+									},
+									function (result, traitementArretOk) {
+										console.log(result);
+										console.log(traitementArretOk);
+										if (result.length == 0) { //Si l'arrêt n'existe pas
+											//On le créer
+											clientGestBD.emit('createStop', newStop, function (err) {
+												console.log("Arrêt " + newStop.stop_id + " créer.");
+												traitementArretOk(err);
+											});
+										}
+										else {
+
+											clientGestBD.emit('updateStop', { _id: result[0]._id }, newStop, function (err) {
+												console.log("Arrêt " + newStop.stop_id + " mis à jour." + err);
+												traitementArretOk(err);
+											});
+										}
+									}
+								],
+								arretTermine // ON termine le traitement de l'arrêt
+							);
+						},
+						function (err) {
+							console.log("Traitement des arrêts terminé.");
+							updateBDStopsTermine(err, GTFS);
+						}
+					);
+				},
+				function (GTFS, updateBDLineTermine) {
+					console.log("Mise à jour des arrêts terminée.");
+					console.log("Mise à jour des lignes...");
+					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
+					//En limitant à 3 en même temps pour ne pas flooder la bdd
+					async.eachLimit(GTFS.ligne, 3,
+						function (ligne, ligneTermine) {
+							console.log("Insertion de " + ligne.route_id);
+
+
+							/* Dans l'ordre :
+							 On vérifie si l'arrêt existe déjà
+							 Si il existe, on le met à jour
+							 Sinon, on le créer
+							 */
+							async.waterfall([
+									function (verifLigneExisteTermine) { //On vérifie si l'arrêt existe déjà
+										clientGestBD.emit(
+											'selectLines',  //On sélectionne les lignes
+											//Qui correspondent à ces critères
+											{ route_id: ligne.route_id, compagnieId: agencyId },
+											verifLigneExisteTermine // Callback
+										);
+									},
+									function (result, traitementLigneOk) {
+										var newLine = {};
+										for (attr in ligne) {
+											newLine[attr] = ligne[attr];
+										}
+										newLine.compagnieId = agencyId;
+										if (result.length == 0) { //Si l'arrêt n'existe pas
+											//On le créer
+											clientGestBD.emit('createLine', newLine, function (err) {
+												console.log("Ligne " + newLine.route_id + " créer.");
+												traitementLigneOk(err);
+											});
+										}
+										else {
+											clientGestBD.emit('updateLine', { _id: result[0]._id }, newLine, function (err) {
+												console.log("Ligne " + newLine.route_id + " mis à jour.");
+												traitementLigneOk(err);
+											});
+										}
+									}
+								],
+								ligneTermine // ON termine le traitement de la ligne
+							);
+						},
+						function (err) {
+							console.log("Traitement des lignes terminé.");
+							updateBDLineTermine(err, GTFS);
+						}
+					);
 				},
 				function (traitementGTFSRealTimeTermine) {
-					console.log("Mise à jour des stop OK");
+					console.log("Mise à jour des lignes OK");
 					traitementGTFSRealTimeTermine(null);
 				}
 		],
@@ -277,7 +366,7 @@ function parseGTFS(directory, callback) {
 				fileName: 'agency.txt', 	//Nom du fichier
 				required: true,				//Est-il obligatoire ?
 				internalName: "compagnie", 	//Nom interne
-				internalId: "agency_id",	//Attribut qui servira d'identifiant, pour l'objet qui sera renvoyé
+				// internalId: "agency_id",	//Attribut qui servira d'identifiant, pour l'objet qui sera renvoyé
 				attributes: {				//Liste des attributs à récupérer dans ce fichier
 					agency_id: 			{ required: true },
 					agency_name: 		{ required: true },
@@ -292,7 +381,7 @@ function parseGTFS(directory, callback) {
 				fileName: 'stops.txt',
 				required: true,
 				internalName: "arret",
-				internalId: "stop_id",
+				// internalId: "stop_id",
 				attributes: {
 					stop_id: 			{ required: true },
 					stop_code: 			{ required: false },
@@ -307,7 +396,7 @@ function parseGTFS(directory, callback) {
 				fileName: 'routes.txt',
 				required: true,
 				internalName: "ligne",
-				internalId: "route_id",
+				// internalId: "route_id",
 				attributes: {
 					route_id: 			{ required: true },
 					route_short_name: 	{ required: true },
@@ -320,14 +409,37 @@ function parseGTFS(directory, callback) {
 				fileName: 'trips.txt',
 				required: true,
 				internalName: "ligne",
-				internalId: "route_id",
+				// internalId: "route_id",
 				attributes: {
-					route_id: 			{ required: true },
-					service_id: 		{ required: true },
-					trip_id: 			{ required: true },
-					trip_headsign: 		{ required: true }
+					route_id: 				{ required: true },
+					service_id: 			{ required: true },
+					trip_id: 				{ required: true },
+					trip_headsign: 			{ required: true },
+					trip_short_name: 		{ required: false },
+					direction_id: 			{ required: false },
+					block_id: 				{ required: false },
+					shape_id: 				{ required: false },
+					wheelchair_accessible: 	{ required: false },
+					bikes_allowed: 			{ required: false }
 				}
 			},
+			{
+				fileName: 'stop_times.txt',
+				required: true,
+				internalName: "arretLigne",
+				attributes: {
+					trip_id: 			{ required: true },
+					arrival_time: 		{ required: true },
+					departure_time: 	{ required: true },
+					stop_id: 			{ required: true },
+					stop_sequence: 		{ required: true },
+					stop_headsign: 		{ required: false },
+					pickup_type: 		{ required: false },
+					drop_off_type: 		{ required: false },
+					shape_dist_traveled:{ required: false },
+					timepoint: 			{ required: false }
+				}
+			}
 		];
 		var toReturn = {}; //Préparation de la réponse
 		//Pour chaque éléments du tableau, on applique une fonction qui traite le fichier associé
@@ -336,7 +448,7 @@ function parseGTFS(directory, callback) {
 				var filepath = path.join(directory, file.fileName);
 				//Si le fichier contient des informations à insérer attribut qui n'a pas encore été crée dans la réponse, on le créer
 				if (!_.has(toReturn, file.internalName)) {
-					toReturn[file.internalName] = {};
+					toReturn[file.internalName] = [];
 				}
 				if (!fs.existsSync(filepath)) {
 					if (file.required) { //Si le fichier n'existe pas et qu'il a été définie comme obligatoire, on lève une erreur
@@ -360,16 +472,18 @@ function parseGTFS(directory, callback) {
 									delete line[key];
 								}
 							}
-							//On vérifie si l'attribut qui sert d'ID est présent, sinon on lève une erreur
+							/* On vérifie si l'attribut qui sert d'ID est présent, sinon on lève une erreur
 							if (!_.has(file.attributes, file.internalId)) {
 								return fileHasBeenProcessed(new Error("L'attribut d'identification " + file.internalId + " n'a pas été trouvé dans le fichier " + file.fileName));
 							}
+
 							else { //Sinon on créer dans la réponse l'objet qui recevra les informations de la ligne qu'on est entrain de lire si l'objet n'existe pas déjà
 								var id = line[file.internalId];
 								if (!_.has(toReturn[file.internalName], id)) {
 									toReturn[file.internalName][id] = {};
 								}
-							}
+							}*/
+							var aRemplir = {};
 							//Pour chaques attributs à récuperer dans le fichier
 							for (var attribute in file.attributes) {
 								//On vérifie que l'attribut est bien présent dans la ligne qu'on est entrain de scanner, si
@@ -380,16 +494,17 @@ function parseGTFS(directory, callback) {
 								//On transtype l'information si nécessaire
 								if (_.has(file.attributes[attribute], 'type')) {
 									if (file.attributes[attribute].type == "Int") {
-										toReturn[file.internalName][id][attribute] = parseInt(line[attribute]);
+										aRemplir[attribute] = parseInt(line[attribute]);
 									}
 									if (file.attributes[attribute].type == "Float") {
-										toReturn[file.internalName][id][attribute] = parseFloat(line[attribute]);
+										aRemplir[attribute] = parseFloat(line[attribute]);
 									}
 								}
 								else { //Sinon on la met telle quelle
-									toReturn[file.internalName][id][attribute] = line[attribute];
+									aRemplir[attribute] = line[attribute];
 								}
 							} //On a lu un attribut
+							toReturn[file.internalName].push(aRemplir);
 						} //On a lu une ligne
 					}
 				); //On a traiter un flot d'information

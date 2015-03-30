@@ -37,10 +37,16 @@ var ligneSchema = new mongoose.Schema({
 	route_short_name : String,
 	route_long_name : String,
 	route_desc : String,
-	route_type : String,
+	route_type : Number,
 	service_id : String,
 	trip_id : String,
 	trip_headsign : String,
+	trip_short_name: String,
+	direction_id: Number,
+	block_id: Number,
+	shape_id: Number,
+	wheelchair_accessible: Number,
+	bikes_allowed: Number,
 	compagnieId : Schema.ObjectId
 });
 
@@ -58,7 +64,14 @@ var arretSchema = new mongoose.Schema({
 //	Schéma lien entre arret et ligne
 var arretLigneSchema = new mongoose.Schema({
 	arretId : Schema.ObjectId,
-	ligneId : Schema.ObjectId
+	ligneId : Schema.ObjectId,
+	arrival_time: String,
+	departure_time: String,
+	stop_sequence: Number,
+	pickup_type: Number,
+	drop_off_type: Number,
+	timepoint: Number,
+	compagnieId : Schema.ObjectId
 });
 
 //	Schéma des véhicules
@@ -294,12 +307,11 @@ io.on('connection', function(socket) {
 		ligneModel.findOneAndUpdate(query, update, function(err, d) {
 			if(err) {
 				console.log('Database Line update : false');
-				if(callback) callback(false);
 			}
 			else {
 				console.log('Database Line update : true');
-				if(callback) callback(true);
 			}
+			if(callback) callback(err);
 		});
 	});
 
@@ -404,12 +416,11 @@ io.on('connection', function(socket) {
 		arretModel.findOneAndUpdate(query, update, function(err, d) {
 			if(err) {
 				console.log('Database Stop update : false');
-				if(callback) callback(false);
 			}
 			else {
 				console.log('Database Stop update : true');
-				if(callback) callback(true);
 			}
+			if(callback) callback(err);
 		});
 	});
 
@@ -463,12 +474,11 @@ io.on('connection', function(socket) {
 		newStopLine.save(function(err) {
 			if(err) {
 				console.log('Database link between Stop & Line creation : false');
-				if(callback) callback(false);
 			}
 			else {
 				console.log('Database link between Stop & Line creation : true');
-				if(callback) callback(true);
 			}
+			if(callback) callback(err);
 		});
 	});
 
@@ -490,12 +500,11 @@ io.on('connection', function(socket) {
 		arretLigneModel.findOneAndUpdate(query, update, function(err, d) {
 			if(err) {
 				console.log('Database link between Stop & Line update : false');
-				if(callback) callback(false);
 			}
 			else {
 				console.log('Database link between Stop & Line update : true');
-				if(callback) callback(true);
 			}
+			if(callback) callback(err);
 		});
 	});
 
