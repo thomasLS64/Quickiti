@@ -420,6 +420,7 @@ io.on('connection', function(socket) {
 			else {
 				console.log('Database Stop update : true');
 			}
+			if (callback) callback(err);
 		});
 	});
 
@@ -730,7 +731,7 @@ function verifRoutes(points, callback) {
 					for(var l2=0; l2<points[p+1].arrets[a2].lignes.length; l2++) {
 						var ligne1 = points[p].arrets[a1].lignes[l1]._id,
 							ligne2 = points[p+1].arrets[a2].lignes[l2]._id;
-
+						
 						if(ligne1 == ligne2) {
 							routes.push({
 								points: [points[p], point[p+1]],
