@@ -420,7 +420,6 @@ io.on('connection', function(socket) {
 			else {
 				console.log('Database Stop update : true');
 			}
-			if(callback) callback(err);
 		});
 	});
 
@@ -631,7 +630,7 @@ io.on('connection', function(socket) {
 	**		socket.emit('searchStopsNearTo', point, distance, callback);
 	*/
 	socket.on('searchStopsNearTo', function(point, distance, callback) {
-		console.log('Request')
+		console.log('simple request');
 		arretModel.find({
 			'location': {
 				$nearSphere: {
@@ -665,94 +664,85 @@ io.on('connection', function(socket) {
 	**		socket.emit('searchRoutes', points, perimetre, callback);
 	*/
 	socket.on('searchRoutes', function(points, perimeter, callback) {
-		//J'ai pas testé.
-		async.series([
-			// Recupération de tout les arrêts à proximités des points de passage de l'itinéraire
-			function (callbackFinRecupArret) {
-				for(var i=0; i<points.length; i++) {
-					arretModel.find({
-						'location': {
-							$nearSphere: {
-								$geometry: {
-									type : "Point",
-									coordinates : [ points[i].latitude, points[i].longitude ]
-								},
-								$minDistance: 0,
-								$maxDistance: distance
-							}
-						}
-					},  function(err, arretsDuPoint) {
-						if(!err) {
-							points[i].arrets = [];
-							points[i].arrets.push(arretsDuPoint);
+		console.log('Route request');
 
-							// Récupération des lignes de chaque arrets
-							for(var k=0; k<arretsDuPoint.length; k++) {
-								arretLigneModel.find({'arretId':arretsDuPoint[i][k]._id}, function(err, lignesDeLArret) {
-									if(!err) {
-										points[i].arrets[k].lignes = [];
-										points[i].arrets[k].lignes.push(lignesDeLArret);
-									}
-									else
-									callbackFinRecupArret(err, null);
-								});
-							}
-						}
-						else callbackFinRecupArret(err, null);
-					});
-				}
-			},
-			function (callbackFinParcoursPoints) {
-				// APRES
-				// Parcours de tous les points
-				for(var i=0; i<points.length-1; i++) {
-					// Itinéraire possibles du point n au point n+1
-					var itineraires = [];
+		var pointsItineraire = [],
+			arretTmp;
 
-					// Parcours des arrets du point n et n+1
-					for(var k1=0; k1<points[i].arrets.length; k1++) {
-						for(var k2=0; k2<points[i+1].arrets.length; k2++) {
+		for(var i=0; i<points.length; i++) {
+			var pointTmp = points[i];
 
-							// Parcours des lignes des arrets du point n et n+1
-							for(var w1=0; w1<points[i].arrets[k1].length; w1++) {
-								for(var w2=0; w2<points[i].arrets[k2].length; w2++) {
-									if(points[i].arrets[k1].lignes[w1] == points[i+1].arrets[k2].lignes[k2]) {
-										itineraires[itineraires.length].ligne = points[i].arrets[k1].lignes[w1]._id;
-										itineraires[itineraires.length].arretDepart = points[i].arrets[k1]._id;
-										itineraires[itineraires.length].arretFin = points[i].arrets[k2]._id;
-									}
-								}
-							}
-						}
+			arretModel.find({
+				'location': {
+					$nearSphere: {
+						$geometry: {
+							type : "Point",
+							coordinates : [ points[i].latitude, points[i].longitude ]
+						},
+						$minDistance: 0,
+						$maxDistance: perimeter
 					}
-					points[i] = itineraires;
 				}
-				callbackFinParcoursPoints(null, points);
-			}
-		], callback); 	//Ici callback sera appelé avec en paramètre :
-						// (err, results) = (err, un tableau avec le contenu de points (et non points directement) donc soit tu laisse comme ca soit tu met :
-						/*
-							function (err, results) {
-								if (!err) callback(null, results[0]);
-								else callback(err, null);
-							}
-						 */
-						//Un exemple tout droit sortis de la doc - https://github.com/caolan/async#seriestasks-callback
-						/*
-							async.series([
-								function(callback){
-									// do some stuff ...
-									callback(null, 'one');
-								},
-								function(callback){
-									// do some more stuff ...
-									callback(null, 'two');
+			},  function(err, arretsDuPoint) {
+				pointTmp.arrets = [];
+
+				if(!err) {
+					// Récupération des lignes de chaque arrets
+					for(var k=0; k<arretsDuPoint.length; k++) {
+						arretTmp = arretsDuPoint[k];
+
+						arretLigneModel.find({'arretId': arretTmp._id}, function(err, lignesDeLArret) {
+							if(!err) {
+								arretTmp.lignes = lignesDeLArret;
+								pointTmp.arrets.push(arretTmp);
+								pointsItineraire.push(pointTmp);
+
+								if(pointsItineraire.length == points.length) {
+									verifRoutes(pointsItineraire, function(err, d) {
+										if(callback) callback(err, d);
+									});
 								}
-							],
-							// optional callback
-							function(err, results){
-								// results is now equal to ['one', 'two']
-							});
-						*/
+							}
+						});
+
+					}
+				}
+				else {
+					if(callback) callback(err, null);
+				}
+			});
+		}
 	});
 });
+
+function verifRoutes(points, callback) {
+	var routes = [];
+
+	// Parcours des points du trajet
+	for(var p=0; p<points.length-1; p++) {
+		// Parcours des arrets du point i
+		for(var a1=0; a1<points[p].arrets.length; a1++) {
+			// Parcours des lignes de l'arrets a1 du point i
+			for(var l1=0; l1<points[p].arrets[a1].lignes.length; l1++) {
+				// Parcours des arrets du point i+1
+				for(var a2=0; a2<points[p+1].arrets.length; a2++) {
+					// Parcours des lignes de l'arret a2 du point i+1
+					for(var l2=0; l2<points[p+1].arrets[a2].lignes.length; l2++) {
+						var ligne1 = points[p].arrets[a1].lignes[l1]._id,
+							ligne2 = points[p+1].arrets[a2].lignes[l2]._id;
+
+						if(ligne1 == ligne2) {
+							routes.push({
+								points: [points[p], point[p+1]],
+								arrets: [points[p].arrets[a1], points[p+1].arrets[a2]],
+								ligne: points[p].arrets[a1].lignes[l1]
+							});
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if(callback) callback(null, routes);
+}
