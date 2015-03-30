@@ -71,7 +71,7 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
-    //Évènement qui se déclanche quand on perd le focus du champs de code postale
+    //Évènement qui se déclenche quand on perd le focus du champs de code postale
     document.getElementById("inputCP").addEventListener('blur', function () {
         //Si le code postale fait moins de deux caractère, on fait rien
         if (this.value.length < 2) return true;

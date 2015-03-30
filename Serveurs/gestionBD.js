@@ -24,13 +24,13 @@ var compagnieSchema = new mongoose.Schema({
 	agency_phone : String,
 	agency_lang : String,
 	email : { type : String, match: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/ },
-	password : String,
+	password : { type: String, bcrypt: true },
 	urlGTFSFile : String,
 	urlGTFSTripUpdate : String,
 	urlGTFSAlert : String,
 	urlGTFSVehiclePosition : String
 });
-
+compagnieSchema.plugin(require('mongoose-bcrypt'));
 //	Schéma d'une ligne
 var ligneSchema = new mongoose.Schema({
 	route_id : String,
@@ -196,6 +196,25 @@ io.on('connection', function(socket) {
 		});
 	});
 
+	/*
+		loginAgency
+		return bool :
+		true : logged
+		false : not logged
+	 */
+	socket.on('loginAgency', function (email, pass, callback) {
+		compagnieModel.findOne({ email: email }, function (err, agency) {
+			if (!err) {
+				if (agency.verifyPasswordSync(pass)) {
+					callback(true, agency);
+				}
+				else callback(false);
+			}
+			else {
+				callback(false);
+			}
+		});
+	});
 
 	/*
 	**	Ligne
@@ -437,11 +456,11 @@ io.on('connection', function(socket) {
 		var newStopLine = new arretLigneModel();
 
 		// Peuplement des différents champs
-		newStop.arretId = d.arretId;
-		newStop.ligneId = d.ligneId;
+		newStopLine.arretId = d.arretId;
+		newStopLine.ligneId = d.ligneId;
 
 		// Insertion en base de données
-		newStop.save(function(err) {
+		newStopLine.save(function(err) {
 			if(err) {
 				console.log('Database link between Stop & Line creation : false');
 				if(callback) callback(false);
@@ -640,7 +659,7 @@ io.on('connection', function(socket) {
 	socket.on('searchRoutes', function(points, perimeter, callback) {
 		//J'ai pas testé.
 		async.series([
-			// Recupération de tout les arrets à proximités des points de passege de l'itinéraire
+			// Recupération de tout les arrêts à proximités des points de passage de l'itinéraire
 			function (callbackFinRecupArret) {
 				for(var i=0; i<points.length; i++) {
 					arretModel.find({

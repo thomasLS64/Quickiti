@@ -1,26 +1,4 @@
-<!DOCTYPE html>
-<html lang="en">
-    <head>
-        <meta charset="UTF-8" />
-        <title>Quickiti - Inscription</title>
-        <link rel="stylesheet" href="css/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
-        <style>
-            a {text-decoration: none; color: black;}
-        </style>
-        <script src="/socket.io/socket.io.js"></script>
-        <script src="js/inscription.js"></script>
-    </head>
-
-    <body class="container-fluid">
-        <header>
-
-            <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
-                <h1><div class="page-header">Inscription à Quickiti</div></h1>
-                 <% include ../partials/header.ejs %>
-            </div>
-        </header>
-        <main>
-            <div class="row">
+<% include ../partials/header.ejs %>
                 <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
                     <br />
                     <div class="panel panel-default">
@@ -209,7 +187,4 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </main>
-    </body>
-</html>
+<% include ../partials/footer.ejs %>

@@ -1,4 +1,32 @@
-    <ul class="nav nav-tabs">
-        <li role="presentation" class="active"><a href="/inscription">Inscription</a></li>
-        <li role="presentation"><a href="/connexion">Connexion</a></li>
-    </ul>
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <title>Quickiti - <%= pageTitle %></title>
+        <link rel="stylesheet" href="css/bootstrap-3.3.4-dist/css/bootstrap.min.css" />
+        <style>
+            a {text-decoration: none; color: black;}
+        </style>
+        <script src="/socket.io/socket.io.js"></script>
+        <script src="js/inscription.js"></script>
+    </head>
+
+    <body class="container-fluid">
+        <header>
+
+            <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
+                <h1><div class="page-header"><%= pageHeader %></div></h1>
+                <ul class="nav nav-tabs">
+                    <% if (agency) { %>
+                    <li role="presentation"<% if (tabAct == "espmbr") { %> class="active" <% } %>><a href="/inscription">Espace membre</a></li>
+                    <li role="presentation"><a href="/deconnexion">Déconnexion</a></li>
+                    <% } else { %>
+                    <li role="presentation"<% if (tabAct == "insc") { %> class="active" <% } %>><a href="/inscription">Inscription</a></li>
+                    <li role="presentation"<% if (tabAct == "conn") { %> class="active" <% } %>><a href="/connexion">Connexion</a></li>
+                    <% } %>
+                </ul>
+
+            </div>
+        </header>
+        <main>
+            <div class="row">

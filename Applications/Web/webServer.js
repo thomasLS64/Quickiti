@@ -5,6 +5,9 @@ var express = require('express'),
 	server = require('http').createServer(app),
 	io = require('socket.io')(server),
 	request = require('request'),
+	cookieParser = require('cookie-parser'),
+	session = require('cookie-session'),
+	bodyParser = require('body-parser'),
 	validator = require('validator'),
 	port = 8080;
 /*
@@ -66,15 +69,76 @@ clientServeurGestBD.on('retourUtilisateur', function (mess, type, sockID) {
 server.listen(port, function() {
 	console.log('[Serveur Web]'.cyan + ' Le serveur web écoute sur le port %d', port);
 });
-
+app.use(cookieParser());
+app.use(session({secret: 'QUICKITI987',  saveUninitialized: true}));
+app.use(bodyParser());
+//Middleware
+function requireLogin (req, res, next) {
+	if (req.session.agency) {
+		// User is authenticated, let him in
+		next();
+	} else {
+		// Otherwise, we redirect him to login form
+		res.redirect("/connexion");
+	}
+}
+function requireNotLogged (req, res, next) {
+	console.log(req.session.agency);
+	if (!req.session.agency) {
+		// User isn't authenticated, let him in
+		next();
+	} else {
+		// Otherwise, we redirect him to member space
+		res.redirect("/espaceMembre");
+	}
+}
 // Dossier contenant l'application web
 app.use(express.static(__dirname + '/public'))
-	.get('/inscription/', function (req, res) {
-		res.render('pages/inscription.ejs');
+	.get('/inscription',[requireNotLogged], function (req, res) {
+		res.render('pages/inscription.ejs', { pageTitle: "Inscription", pageHeader: "Inscription à Quickiti", tabAct: "insc", agency: null });
 	})
-	.get('/espaceMembre/', function () {
-
-	});
+	.get('/connexion', [requireNotLogged], function (req, res) {
+		res.render('pages/connexion.ejs', { pageTitle: "Connexion", pageHeader: "Connexion à Quickiti", tabAct: "conn", agency: null });
+	})
+	.post('/connexion', function (req, res) {
+		if (req.body.emailConnexion != null && req.body.passConnexion != null) {
+			clientServeurGestBD.emit("loginAgency",
+				req.body.emailConnexion,
+				req.body.passConnexion,
+				function (logged, agency) {
+					if (logged) {
+						console.log(agency);
+						req.session.agency = agency;
+						res.redirect('/espaceMembre');
+					} else {
+						res.render('pages/connexion.ejs', {
+							pageTitle: "Connexion",
+							pageHeader: "Connexion à Quickiti",
+							tabAct: "conn",
+							erreur: "Vos identifiants ne sont pas valides.",
+							agency: null
+						});
+					}
+				}
+			);
+		}
+		else {
+			res.render('pages/connexion.ejs', {
+				pageTitle: "Connexion",
+				pageHeader: "Connexion à Quickiti",
+				tabAct: "conn",
+				erreur: "Vos identifiants ne sont pas renseignés."
+			});
+		}
+	})
+	.get('/espaceMembre', [requireLogin], function (req, res) {
+		res.render('pages/espaceMembre.ejs', { pageTitle: "Espace membre", pageHeader: "Espace membre", tabAct: "espmbr", agency: req.session.agency });
+	})
+	.get('/deconnexion', [requireLogin], function(req, res) {
+		req.session = null;
+		res.redirect('/connexion');
+	})
+;
 // Serveur de socket de l'application web
 
 io.on('connection', function(socket) {

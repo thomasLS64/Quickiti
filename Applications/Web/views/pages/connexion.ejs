@@ -1,0 +1,31 @@
+<% include ../partials/header.ejs %>
+<div class="col-xs-12 col-sm-12 col-md-6 col-md-offset-3">
+    <br />
+    <div class="panel panel-default">
+        <div class="panel-heading">Formulaire de connexion</div>
+        <div class="panel-body">
+            <% if (typeof(erreur) != "undefined") { %>
+            <div class="bg-danger">
+                <%= erreur %>
+            </div>
+            <% } %>
+            <!-- Formulaire de connexion -->
+            <form id="formConnexion" method="POST" action="" class="form-horizontal">
+                <div class="form-group">
+                    <label for="inputRS" class="col-sm-3 control-label">Email :</label>
+                    <div class="col-sm-9">
+                        <input type="email" class="form-control" name="emailConnexion" id="emailConnexion">
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="passConnexion" class="col-sm-3 control-label">Mot de passe :</label>
+                    <div class="col-sm-9">
+                        <input type="password" class="form-control" name="passConnexion" id="passConnexion">
+                    </div>
+                </div>
+                <button type="submit" id="submitConnexion" class="pull-right btn btn-default">Se connecter</button>
+            </form>
+        </div>
+    </div>
+</div>
+<% include ../partials/footer.ejs %>
