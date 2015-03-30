@@ -365,11 +365,11 @@ io.on('connection', function(socket) {
 		newStop.save(function(err) {
 			if(err) {
 				console.log('Database Stop creation : false');
-				if(callback) callback(false);
+				if(callback) callback(err);
 			}
 			else {
 				console.log('Database Stop creation : true');
-				if(callback) callback(true);
+				if(callback) callback(null);
 			}
 		});
 	});

@@ -87,60 +87,95 @@ io.on('connection', function (socket) {
 
 	console.log("Un client est connecté");
 	/*
-		Inscription d'une agence
+		Mise à jour des données d'une agence
 
 		Paramètre : 
-			Agency {
-				name: "...",
-				urlGTFS: "...",
-				email: "...",
-				password: "...",
-				adress: "...",
-				zipCode: "...",
-				urlSIRI: "...",
-				urlGTFSRealtime: "..."
-			}
+			AgencyId
 
 		- On se connecte alors au serveur GTFS s'il y en a un puis on télécharge le fichier zip, on le dézippe puis
 		on lit les données qu'on transforme pour les envoyer au serveur de gestion de la base de donnée
 
 	*/
-	socket.on('agencySubscribe', function (form, callback) {
+	socket.on('updateGTFS', function (agencyId, callback) {
 		if (!clientGestBD) { //Si on est pas connecté au SGBD, on renvoie une erreur.
 			callback({ error: "notConnectedToSGBD" });
 			return false;
 		}
 		console.log("------------------------------".bold);
-		console.log("Demande d'inscription de l'agence : " + form.raisSocial.grey);
+		console.log("Demande de mise à jour d'une agence (" + agencyId + ")");
 		console.log("------------------------------".bold);
 
 		// Enchainement asynchrone de fonctions
-		async.series({
-			GTFS: function (traitementGTFSTermine) {
-				if (Agency.urlGTFS == "") {
-					traitementGTFSTermine(null);
+		async.waterfall([
+				function (recupTermine) {
+					console.log("Recup de l'agence..." + agencyId);
+					clientGestBD.emit('selectAgencies', { _id: agencyId }, recupTermine);
+				},
+				function (agency, traitementGTFSTermine) {
+					agency = agency[0];
+
+
+					if (agency.urlGTFSFile == "") {
+						traitementGTFSTermine(null);
+					}
+					else {
+						//Téléchargement et traitements des fichiers GTFS si ils existent
+						downloadAndParseGTFS(agency.agency_name, agency.urlGTFSFile, traitementGTFSTermine);
+					}
+				},
+				function (GTFS, updateBDAgencyTermine) {
+					console.log(GTFS);
+					for (a in GTFS.compagnie) {
+						var agency_id = a;
+					}
+					console.log("Mise à jour de l'agence...");
+					clientGestBD.emit('updateAgency', {
+						_id: agencyId
+					},  {
+						agency_id: agency_id,
+						agency_timezone: GTFS.compagnie[agency_id].agency_timezone,
+						agency_lang: GTFS.compagnie[agency_id].agency_lang
+					}, function (isSuccess) {
+						if (isSuccess) {
+							updateBDAgencyTermine(null, GTFS);
+						}
+						else {
+							updateBDAgencyTermine({error: "Mise à jour de l'agence échouée."});
+						}
+					});
+				},
+				function (GTFS, updateBDStopsTermine) {
+					console.log("Mise à jour de l'agence terminée.");
+					for (stop in GTFS.arret) {
+						console.log("Insertion de " + stop);
+						newStop = {};
+						newStop.stop_id = GTFS.arret[stop].stop_id;
+						newStop.stop_name = GTFS.arret[stop].stop_name;
+						newStop.stop_desc = GTFS.arret[stop].stop_desc;
+						newStop.stop_url = GTFS.arret[stop].stop_url;
+						newStop.location_type = GTFS.arret[stop].location_type;
+						newStop.stop_lat = GTFS.arret[stop].stop_lat;
+						newStop.stop_lon = GTFS.arret[stop].stop_lon;
+						newStop.compagnieId = agencyId;
+						clientGestBD.emit('createStop', newStop, function (err) {
+							if (err) {
+								console.log(err);
+							}
+						});
+					}
+					updateBDStopsTermine(null);
+				},
+				function (traitementGTFSRealTimeTermine) {
+					console.log("Mise à jour des stop OK");
+					traitementGTFSRealTimeTermine(null);
 				}
-				else {
-					//Téléchargement et traitements des fichiers GTFS si ils existent
-					downloadAndParseGTFS(Agency.name, Agency.urlGTFS, traitementGTFSTermine);
-				}
-			},
-			GTFSRealTime: function (traitementGTFSRealTimeTermine) {
-				traitementGTFSRealTimeTermine(null);
-			}
-		},
+		],
 		function (err, results) {
 			if (!err) {
-				reponse.gtfs = results.GTFS;
-				reponse.siri = results.SIRI;
-				if (!clientGestBD) { //Si on est pas connecté au SGBD, on renvoie une erreur.
-					callback({ error: "notConnectedToSGBD" });
-				}
-				else {
-					callback(reponse);
-				}
+				callback(true);
 			}
 			else {
+				console.log(err);
 				callback({ error: err });
 			}
 		});
@@ -169,7 +204,7 @@ function downloadFile(fileUrl, destinationFile, cb) {
 		Si le fichier est sur un serveur web
 	*/
 	if (file_protocol === 'http:' || file_protocol === 'https:') {
-		request(fileUrl, function () {
+		request(fileUrl, function (response) {
 			if(response && response.statusCode != 200){ 
 				cb(new Error('Impossible de télécharger le fichier'));
 			}
@@ -260,7 +295,7 @@ function parseGTFS(directory, callback) {
 					stop_lat: 			{ required: true, type: "Float" },
 					stop_lon: 			{ required: true, type: "Float" },
 					stop_url: 			{ required: false },
-					location_type: 		{ required: true, type: "Int" }
+					location_type: 		{ required: false, type: "Int" } //True
 				}
 			},
 			{
@@ -272,7 +307,7 @@ function parseGTFS(directory, callback) {
 					route_id: 			{ required: true },
 					route_short_name: 	{ required: true },
 					route_long_name: 	{ required: true },
-					route_desc: 		{ required: true },
+					route_desc: 		{ required: false }, //True
 					route_type: 		{ required: true }
 				}
 			},
@@ -368,9 +403,11 @@ function parseGTFS(directory, callback) {
 			//Quand on a finis de lire tous les fichiers :
 			function (err){
 				if (err) {
+					console.log(err);
 					callback(err);
 				}
 				else{
+					console.log("Lecture des fichiers terminée.");
 					callback(null, toReturn);
 				}
 			}

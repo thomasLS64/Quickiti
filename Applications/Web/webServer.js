@@ -286,4 +286,9 @@ io.on('connection', function(socket) {
 			}
 		});
 	});
+	socket.on("updateGTFS", function (idAgency, callback) {
+		clientServeurRecupDonnee = clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback);
+
+
+	});
 });

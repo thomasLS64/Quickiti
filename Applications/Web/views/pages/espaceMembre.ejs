@@ -35,10 +35,10 @@
                     </table>
                 </div>
                 <div class="col-xs-8 well">
-                    Fichier zip GTFS : <a href="<%= agency.urlGTFSFile %>"><%= agency.urlGTFSFile %></a><br />
+                    Fichier zip GTFS : <a href="<%= agency.urlGTFSFile %>"><%= agency.urlGTFSFile %></a> <button data-idagency="<%= agency._id %>" id="updateGTFS">Mettre à jour</button><br />
                     <% if (agency.urlGTFSAlert != "") { %>
                     Fichiers GTFS RealTime : <br />
-                    <a href="<%= agency.urlGTFSAlert %>"><%= agency.urlGTFSAlert%></a> <br />
+                    <a href="<%= agency.urlGTFSAlert %>"><%= agency.urlGTFSAlert %></a> <br />
                     <a href="<%= agency.urlGTFSTripUpdate %>"><%= agency.urlGTFSTripUpdate %></a> <br />
                     <a href="<%= agency.urlGTFSVehiclePosition %>"><%= agency.urlGTFSVehiclePosition %></a> <br />
                     <% } %>
