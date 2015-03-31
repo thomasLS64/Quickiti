@@ -746,11 +746,11 @@ function verifRoutes(points, callback) {
 				for(var a2=0; a2<points[p+1].arrets.length; a2++) {
 					// Parcours des lignes de l'arret a2 du point i+1
 					for(var l2=0; l2<points[p+1].arrets[a2].lignes.length; l2++) {
-						var ligne1 = points[p].arrets[a1].lignes[l1]._id,
-							ligne2 = points[p+1].arrets[a2].lignes[l2]._id;
+						var ligne1 = points[p].arrets[a1].lignes[l1],
+							ligne2 = points[p+1].arrets[a2].lignes[l2];
 						
 
-						if(ligne1 == ligne2) {
+						if(ligne1._id == ligne2._id) {
 							routes.push({
 								arrets: [points[p].arrets[a1], points[p+1].arrets[a2]],
 								ligne: ligne1
