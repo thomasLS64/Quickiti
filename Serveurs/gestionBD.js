@@ -676,15 +676,15 @@ io.on('connection', function(socket) {
 		var pointsItineraire = [],
 			arretTmp;
 
-		for(var i=0; i<points.length; i++) {
-			var pointTmp = points[i];
+		for(var p=0; p<points.length; p++) {
+			var pointTmp = points[p];
 
 			arretModel.find({
 				'location': {
 					$nearSphere: {
 						$geometry: {
 							type : "Point",
-							coordinates : [ points[i].latitude, points[i].longitude ]
+							coordinates : [ points[p].latitude, points[p].longitude ]
 						},
 						$minDistance: 0,
 						$maxDistance: perimeter
@@ -692,21 +692,32 @@ io.on('connection', function(socket) {
 				}
 			},  function(err, arretsDuPoint) {
 				pointTmp.arrets = [];
-console.log('toto');
+
 				if(!err) {
 					// Récupération des lignes de chaque arrets
-					for(var k=0; k<arretsDuPoint.length; k++) {
-						arretTmp = arretsDuPoint[k];
-console.log(arretTmp._id);
-						arretLigneModel.find({'arretId': arretTmp._id}, function(err, lignesDeLArret) {
-							if(!err) {
-								arretTmp.lignes = lignesDeLArret;
-								pointTmp.arrets.push(arretTmp);
-								pointsItineraire.push(pointTmp);
+					for(var a=0; a<arretsDuPoint.length; a++) {
+						arretTmp = arretsDuPoint[a];
 
-								if(pointsItineraire.length == points.length) {
-									verifRoutes(pointsItineraire, function(err, d) {
-										if(callback) callback(err, d);
+						arretLigneModel.find({'arretId': arretTmp._id}, function(err, lignesPassantParArret) {
+							if(!err) {
+								for(var l=0; l<lignesPassantParArret.length; l++) {
+									var lignes = [];
+
+
+									ligneModel.findById(lignesPassantParArret[l].ligneId, function(err, ligne) {
+										lignes.push(ligne);
+
+										if(lignesPassantParArret.length == lignes.length) {
+											arretTmp.lignes = lignes;
+											pointTmp.arrets.push(arretTmp);
+											pointsItineraire.push(pointTmp);
+
+											if(pointsItineraire.length == points.length) {
+												verifRoutes(pointsItineraire, function(err, d) {
+													if(callback) callback(err, d);
+												});
+											}
+										}
 									});
 								}
 							}
@@ -741,9 +752,8 @@ function verifRoutes(points, callback) {
 
 						if(ligne1 == ligne2) {
 							routes.push({
-								points: [points[p], points[p+1]],
 								arrets: [points[p].arrets[a1], points[p+1].arrets[a2]],
-								ligne: points[p].arrets[a1].lignes[l1]
+								ligne: ligne1
 							});
 						}
 					}
