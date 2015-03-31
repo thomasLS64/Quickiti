@@ -42,7 +42,11 @@
                 </div>
                 <div class="col-xs-8 well">
                     Entreprise <b><%= agency.agency_name %></b> <br />
-                    Fichier zip GTFS : <a href="<%= agency.urlGTFSFile %>"><%= agency.urlGTFSFile %></a> <button data-idagency="<%= agency._id %>" id="updateGTFS">Mettre à jour</button><br />
+                    Fichier zip GTFS : <a href="<%= agency.urlGTFSFile %>"><%= agency.urlGTFSFile %></a><br />
+                    <button data-idagency="<%= agency._id %>" id="updateGTFS">Mettre à jour</button><br />
+                    <div id="messageInfo">
+
+                    </div>
                     <% if (agency.urlGTFSAlert != "") { %>
                     Fichiers GTFS RealTime : <br />
                     <a href="<%= agency.urlGTFSAlert %>"><%= agency.urlGTFSAlert %></a> <br />

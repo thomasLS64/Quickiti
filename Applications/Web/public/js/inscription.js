@@ -23,7 +23,8 @@ function affMessage(message, typeMessage) {
 }
 //Connexion au serveur web
 socketWebServer = io("http://127.0.0.1:8080")
-    .on('retourUtilisateur', function (message, typeMessage) {
+    .on('userCallback', function (message, typeMessage) {
+            console.log(message);
            affMessage(message, typeMessage);
        });
 //Evenement qui se déclanche quand la page est chargée
@@ -72,8 +73,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             });
         });
+    }
+    if (document.getElementById("inputCP")) {
         //Évènement qui se déclenche quand on perd le focus du champs de code postale
-        document.getElementById("inputCP").addEventListener('blur', function () {
+        document.getElementById("inputCP").addEventListener('change', function () {
             //Si le code postale fait moins de deux caractère, on fait rien
             if (this.value.length < 2) return true;
             var pays = document.getElementById("selectPays");

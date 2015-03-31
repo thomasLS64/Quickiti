@@ -25,7 +25,7 @@ clientServeurCentral = clientSockIo('http://localhost:8008/', {
  Evenement déclanché quand on est connecté au serveur central
  */
 clientServeurCentral.on('connect', function(){
-	console.info("[Serveur BD] ".magenta + "Connecté au serveur de gestion de base de donnée.".green);
+	console.info("[Serveur Central] cConnecté au serveur central.".green);
 	clientServeurCentral.connecte = true; //Variable qui indique l'état de la connexion au serveur
 });
 
@@ -33,7 +33,7 @@ clientServeurCentral.on('connect', function(){
  Evenement déclanché quand on est déconnecté du serveur de gestion de bd
  */
 clientServeurCentral.on('disconnect', function(){
-	console.error("[Serveur BD] ".magenta + "Déconnecté du serveur central.".red);
+	console.error("[Serveur Central] Déconnecté du serveur central.");
 	clientServeurCentral.connecte = false;
 });
 
@@ -41,21 +41,21 @@ clientServeurCentral.on('disconnect', function(){
  Evenement déclanché quand on tente de se reconnecter au serveur de gestion de bd
  */
 clientServeurCentral.on('reconnecting', function(n) {
-	console.info("[Serveur BD] ".magenta + "Reconnexion en cours (".yellow + n + ") ...".yellow);
+	console.info("[Serveur Central] Reconnexion en cours (".yellow + n + ") ...".yellow);
 });
 
 /*
  Evenement déclanché quand une tentative de reconnexion au serveur de gestion de bd a échoué
  */
 clientServeurCentral.on('reconnect_error', function() {
-	console.error("[Serveur BD]" + " Reconnexion échouée\n");
+	console.error("[Serveur Central]" + " Reconnexion échouée\n");
 });
 
 /*
  Evenement déclanché quand on a atteind la limite de temps passé à essayer de se reconnecter au serveur de gestion de bd
  */
 clientServeurCentral.on('reconnect_failed', function() {
-	console.error("[Serveur BD] Reconnexion au serveur de gestion de bd impossible.");
+	console.error("[Serveur Central] Reconnexion au serveur central.");
 });
 clientServeurCentral.on('retourUtilisateur', function (mess, type, sockID) {
 	socketsWeb[sockID].emit('retourUtilisateur', mess, type);
@@ -232,9 +232,47 @@ io.on('connection', function(socket) {
 		clientServeurCentral.emit('clientRequest', requestType, request, callback);
 		console.log("[Serveur BD]".magenta + "< Envoi d'une requête de type " + requestType + " ...");
 	});
-	socket.on('inscription', function (form, callback) {
-		console.log("Inscription en cours...");
-		socket.emit("retourUtilisateur", "Validation du formulaire en cours...", "info");
+	socket.on('subscribeAgency', function (form, callback) {
+		console.log("Inscription d'une compagnie...");
+		socket.emit("userCallback", "Validation du formulaire en cours...", "info");
+		var formErrors = [];
+		if (typeof form.gtfs != "undefined") {
+			if (typeof form.gtfs.zipGTFS == "undefined" || !validator.isURL(form.gtfs.zipGTFS)) {
+				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
+			}
+			if (typeof form.gtfs.BoolUseRealTime != "undefined" && form.gtfs.BoolUseRealTime) {
+				if (typeof form.gtfs.addrGTFSAlert == "undefined" || !validator.isURL(form.gtfs.addrGTFSAlert)) {
+					formErrors.push("L'adresse du fichier GTFSRealtime Alert est incorrect ou non définie.");
+				}
+				if (typeof form.gtfs.addrGTFSTripUpdate == "undefined" || !validator.isURL(form.gtfs.addrGTFSTripUpdate)) {
+					formErrors.push("L'adresse du fichier GTFSRealtime Trip Update est incorrect ou non définie.");
+				}
+				if (typeof form.gtfs.addrGTFSVehiclePosition == "undefined" || !validator.isURL(form.gtfs.addrGTFSVehiclePosition)) {
+					formErrors.push("L'adresse du fichier GTFSRealtime Vehicle Position est incorrect ou non définie.");
+				}
+			}
+			else {
+				form.gtfs.addrGTFSVehiclePosition = "";
+				form.gtfs.addrGTFSTripUpdate = "";
+				form.gtfs.addrGTFSAlert = "";
+				form.gtfs.BoolUseRealTime = false;
+			}
+		}
+		else {
+			formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
+		}
+		if (formErrors.length != 0) {
+			socket.emit("userCallback", formErrors, "danger");
+			console.log("Formulaire invalide.");
+			callback();
+		}
+		else {
+			clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, socket.id, callback);
+		}
+	});
+	socket.on('updateAgency', function (form, callback) {
+		console.log("Mise à jour des informations en cours...");
+		socket.emit("userCallback", "Validation du formulaire en cours...", "info");
 		//Tableaux qui contiendra les erreurs si on en trouve, il
 		//sera utilisé pour les afficher à l'utilisateur
 		var formErrors = [];
@@ -330,17 +368,17 @@ io.on('connection', function(socket) {
 		}
 		if (typeof form.gtfs != "undefined") {
 			if (typeof form.gtfs.zipGTFS == "undefined" || !validator.isURL(form.gtfs.zipGTFS)) {
-				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.")
+				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
 			}
 			if (typeof form.gtfs.BoolUseRealTime != "undefined" && form.gtfs.BoolUseRealTime) {
 				if (typeof form.gtfs.addrGTFSAlert == "undefined" || !validator.isURL(form.gtfs.addrGTFSAlert)) {
-					formErrors.push("L'adresse du fichier GTFSRealtime Alert est incorrect ou non définie.")
+					formErrors.push("L'adresse du fichier GTFSRealtime Alert est incorrect ou non définie.");
 				}
 				if (typeof form.gtfs.addrGTFSTripUpdate == "undefined" || !validator.isURL(form.gtfs.addrGTFSTripUpdate)) {
-					formErrors.push("L'adresse du fichier GTFSRealtime Trip Update est incorrect ou non définie.")
+					formErrors.push("L'adresse du fichier GTFSRealtime Trip Update est incorrect ou non définie.");
 				}
 				if (typeof form.gtfs.addrGTFSVehiclePosition == "undefined" || !validator.isURL(form.gtfs.addrGTFSVehiclePosition)) {
-					formErrors.push("L'adresse du fichier GTFSRealtime Vehicle Position est incorrect ou non définie.")
+					formErrors.push("L'adresse du fichier GTFSRealtime Vehicle Position est incorrect ou non définie.");
 				}
 			}
 			else {
@@ -354,11 +392,11 @@ io.on('connection', function(socket) {
 			formErrors.push("Les informations GTFS ne sont pas définies.");
 		}
 		if (formErrors.length == 0) {
-			socket.emit("retourUtilisateur", "Formulaire validé, envoi au serveur de gestion de bd...", 'info');
+			socket.emit("userCallback", "Formulaire valide, enregistrement en base de donnée...", 'info');
 			clientServeurGestBD.emit('createAgency', form, callback);
 		}
 		else {
-			socket.emit("retourUtilisateur", formErrors, "danger");
+			socket.emit("userCallback", formErrors, "danger");
 			console.log("Formulaire invalide.");
 			callback();
 		}
@@ -371,8 +409,16 @@ io.on('connection', function(socket) {
 		});
 	});
 	socket.on("updateGTFS", function (idAgency, callback) {
-		clientServeurRecupDonnee = clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback);
-
-
+		socket.emit('userCallback', "Connexion au serveur de récupération de donnée et requête...", "info");
+		clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback)
+			.on('userCallback', function (message, typeMessage) {
+					socket.emit('userCallback', message, typeMessage);
+				}
+			)
+			.on('error', function (e) {
+					console.log("Erreur");
+					socket.emit('userCallback', "Le serveur de récupération de donnée n'est pas disponible, merci de réessayer plus tard.", "error");
+				}
+			);
 	});
 });

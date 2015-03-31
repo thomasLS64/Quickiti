@@ -108,24 +108,24 @@ io.on('connection', function (socket) {
 		// Enchainement asynchrone de fonctions
 		async.waterfall([
 				function (recupTermine) {
-					console.log("Recup de l'agence..." + agencyId);
+					console.log("Recupération de l'agence..." + agencyId);
 					clientGestBD.emit('selectAgencies', { _id: agencyId }, recupTermine);
 				},
 				function (agency, traitementGTFSTermine) {
 					agency = agency[0];
-
-
 					if (agency.urlGTFSFile == "") {
 						traitementGTFSTermine(null);
 					}
 					else {
 						//Téléchargement et traitements des fichiers GTFS si ils existent
-						downloadAndParseGTFS(agency.agency_name, agency.urlGTFSFile, traitementGTFSTermine);
+						downloadAndParseGTFS(agency.agency_name, agency.urlGTFSFile, function (message, typeMessage) {
+							socket.emit("userCallback", message, typeMessage);
+						}, traitementGTFSTermine);
 					}
 				},
 				function (GTFS, updateBDAgencyTermine) {
-					console.log(GTFS);
 					console.log("Mise à jour de l'agence...");
+					socket.emit("userCallback", "Mise à jour de l'agence...", 'info');
 					var agency = GTFS.compagnie[0];
 					clientGestBD.emit('updateAgency', {
 						_id: agencyId
@@ -139,6 +139,8 @@ io.on('connection', function (socket) {
 						}
 						else {
 							updateBDAgencyTermine({error: "Mise à jour de l'agence échouée."});
+							socket.emit("userCallback", "Mise à jour de l'agence échouée", 'danger');
+
 						}
 					});
 				},
@@ -146,9 +148,10 @@ io.on('connection', function (socket) {
 				function (GTFS, updateBDStopsTermine) {
 					console.log("Mise à jour de l'agence terminée.");
 					console.log("Mise à jour des arrêts...");
+					socket.emit("userCallback", "Mise à jour des arrêts...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
-					async.eachLimit(GTFS.arret, 1,
+					async.eachLimit(GTFS.arret, 3,
 						function (stop, arretTermine) {
 							console.log("Insertion de " + stop.stop_id);
 							var newStop = {};
@@ -205,6 +208,7 @@ io.on('connection', function (socket) {
 				function (GTFS, updateBDLineTermine) {
 					console.log("Mise à jour des arrêts terminée.");
 					console.log("Mise à jour des lignes...");
+					socket.emit("userCallback", "Mise à jour des lignes...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
 					async.eachLimit(GTFS.ligne, 3,
@@ -260,13 +264,12 @@ io.on('connection', function (socket) {
 				function (GTFS, updateBDTripTermine) {
 					console.log("Mise à jour des lignes terminée.");
 					console.log("Mise à jour des trajets...");
+					socket.emit("userCallback", "Mise à jour des trajets...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
 					async.eachLimit(GTFS.trajet, 3,
 						function (trajet, trajetTermine) {
 							console.log("Insertion de " + trajet.trip_id);
-
-
 							/* Dans l'ordre :
 							 On vérifie si l'arrêt existe déjà
 							 Si il existe, on le met à jour
@@ -314,9 +317,10 @@ io.on('connection', function (socket) {
 				function (GTFS, updateBDStopLineTermine) {
 					console.log("Mise à jour des trajets terminée.");
 					console.log("Mise à jour des correspondances arrêts / ligne...");
+					socket.emit("userCallback", "Mise à jour des correspondances arrêts / ligne...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
-					async.eachLimit(GTFS.arretLigne, 3,
+					async.eachLimit(GTFS.arretLigne, 5,
 						function (arretLigne, arretLigneTermine) {
 							console.log("Insertion de la correspondance " + arretLigne.trip_id + "/" + arretLigne.stop_id);
 							/* Dans l'ordre :
@@ -342,7 +346,7 @@ io.on('connection', function (socket) {
 										clientGestBD.emit(
 											'selectStopsLines',  //On sélectionne les corr ligne/arrets
 											//Qui correspondent à ces critères
-											{ route_id: arretLigne.trip_id, arretId: arret._id, ligneId: ligne._id },
+											{ arretId: arret._id, ligneId: ligne._id },
 											function (err, arretLigneTrouve) {
 												verifArretLigneExisteTermine(err, ligne, arret, arretLigneTrouve); // Callback
 											}
@@ -360,13 +364,13 @@ io.on('connection', function (socket) {
 										if (result.length == 0) { //Si la correspondance n'existe pas
 											//On le créer
 											clientGestBD.emit('createStopLine', newArretLigne, function (err) {
-												console.log("Correspondance " + newArretLigne.arretId + " créer.");
+												console.log("Correspondance " + newArretLigne.arretId + "/" + newArretLigne.ligneId + " créer.");
 												traitementArretLigneOk(err);
 											});
 										}
 										else {
 											clientGestBD.emit('updateLine', { _id: result[0]._id }, newArretLigne, function (err) {
-												console.log("Trajet " + newArretLigne.trip_id + " mis à jour.");
+												console.log("Correspondance " + newArretLigne.arretId + "/" + newArretLigne.ligneId + " mise à jour.");
 												traitementArretLigneOk(err);
 											});
 										}
@@ -377,6 +381,7 @@ io.on('connection', function (socket) {
 						},
 						function (err) {
 							console.log("Traitement des lignes / arrêts terminé.");
+							socket.emit("userCallback", "Traitement des lignes / arrêts terminé.", 'info');
 							updateBDStopLineTermine(err, GTFS);
 						}
 					);
@@ -388,10 +393,11 @@ io.on('connection', function (socket) {
 		],
 		function (err, results) {
 			if (!err) {
+				socket.emit("userCallback", "Mise à jour terminé.", 'success');
 				callback(true);
 			}
 			else {
-				console.log(err);
+				socket.emit("userCallback", "Erreur : " + err, 'danger');
 				callback({ error: err });
 			}
 		});
@@ -407,6 +413,7 @@ io.on('connection', function (socket) {
 		callback("test");
 	});
 });
+
 function clearDirectory(directory, cb) {
 	//On efface le dossier de stockage des fichiers GTFS s'il existe
 
@@ -450,43 +457,7 @@ function unzipAt(zipFile, directory, cb){
 	.pipe(unzip.Extract({ path: directory }).on('close', cb))
 	.on('error', cb);
 }
-function parseGTFS(directory, callback) {
-	/*
-		var compagnieSchema = {
-			agency_id : String,
-			agency_name : String,
-			agency_main_site_url : String, //Site officiel de la compagnie
-			agency_gtfs_url: String, //Lien du zip avec les fichiers GTFS
-			agency_fare_url: String, //Lien d'achat de ticket pour la compagnie
-			agency_timezone : String,
-			agency_phone : String,
-			agency_lang : String,
-			email : { type : String, match: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/ },
-			password : String
-		};
-		var arretSchema = new mongoose.Schema({
-			stop_id : String,
-			stop_name : String,
-			stop_desc : String,
-			stop_lat : Number,
-			stop_lon : Number,
-			stop_url : String,
-			location_type : Number,
-			location : { type: [Number], index : "2dsphere" },
-			compagnieId : Schema.ObjectId
-		});
-		var ligneSchema = new mongoose.Schema({
-			route_id : String,
-			route_short_name : String,
-			route_long_name : String,
-			route_desc : String,
-			route_type : String,
-			service_id : String,
-			trip_id : String,
-			trip_headsign : String,
-			compagnieId : Schema.ObjectId
-		});
-		*/
+function parseGTFS(directory, userCallback, callback) {
 		//Objet qui représente les information à récuperer dans les fichiers GTFS
 		var toGrab = [
 			{								//Pour chaque fichier, on a un objet avec : 
@@ -579,6 +550,7 @@ function parseGTFS(directory, callback) {
 				}
 				if (!fs.existsSync(filepath)) {
 					if (file.required) { //Si le fichier n'existe pas et qu'il a été définie comme obligatoire, on lève une erreur
+						userCallback("Fichier " + file.fileName + " introuvable.", "error");
 						return fileHasBeenProcessed(new Error("Fichier " + file.fileName + " introuvable"));
 					}
 					return fileHasBeenProcessed(); //Sinon on passe au suivant
@@ -616,6 +588,7 @@ function parseGTFS(directory, callback) {
 								//On vérifie que l'attribut est bien présent dans la ligne qu'on est entrain de scanner, si
 								//c'est pas le cas on lève une erreur, sinon on continue en transtypant l'information si un type a été donnée
 								if (file.attributes[attribute].required && !_.has(line, attribute)) {
+									userCallback("L'attribut " + attribute + " n'a pas été trouvé dans le fichier " + file.fileName, "error");
 									return fileHasBeenProcessed(new Error("L'attribut " + attribute + " n'a pas été trouvé dans le fichier " + file.fileName));
 								}
 								//On transtype l'information si nécessaire
@@ -640,6 +613,7 @@ function parseGTFS(directory, callback) {
 				parser.on('end', 
 					function(count){
 						console.log("Fichier " + file.fileName.grey + " importé");
+						userCallback("Fichier " + file.fileName.grey + " importé", 'info');
 						fileHasBeenProcessed();
 					}
 				);
@@ -655,12 +629,13 @@ function parseGTFS(directory, callback) {
 				}
 				else{
 					console.log("Lecture des fichiers terminée.");
+					userCallback("Lecture des fichiers terminée.", 'info');
 					callback(null, toReturn);
 				}
 			}
 		);
 }
-function downloadAndParseGTFS(name, urlGTFS, callback) {
+function downloadAndParseGTFS(name, urlGTFS, userCallback, callback) {
 	console.log("----------------------");
 	console.log('Traitement de ' + urlGTFS.grey);
 	var fileLocation = downloadDir + '/' + name;
@@ -678,23 +653,27 @@ function downloadAndParseGTFS(name, urlGTFS, callback) {
 					}
 				}
 				console.log("Téléchargement du fichier zip dans " + fileLocation.grey + " ...");
+				userCallback('Téléchargement du fichier zip...', "info");
 				downloadFile(urlGTFS, zipFileName, cb);
 			},
 			function (cb) {
-				console.log("Décompréssion du fichier ...");
+				console.log("Décompression du fichier...");
+				userCallback('Décompression du fichier zip...', "info");
 				unzipAt(zipFileName, fileLocation, cb);
 			},
 			function (cb) {
 				console.log("Traitement des fichiers GTFS...");
-				parseGTFS(fileLocation, cb)
+				userCallback('Traitement des fichiers GTFS...', "info");
+				parseGTFS(fileLocation, userCallback, cb);
 			},
 			function (cb) {
-				console.log("Nettoyage du dossier " + downloadDir.grey + " ...");
+				console.log("Nettoyage du dossier " + downloadDir.grey + "...");
 				//clearDirectory(fileLocation, cb);
 				cb();
 			}
 		],
 		function (err, results) {
+			console.log("Traitement des fichiers terminé.");
 			callback(null, results[2]);
 		}
 	);
