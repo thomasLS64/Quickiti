@@ -217,7 +217,7 @@ io.on('connection', function(socket) {
 	 */
 	socket.on('loginAgency', function (email, pass, callback) {
 		compagnieModel.findOne({ email: email }, function (err, agency) {
-			if (!err) {
+			if (!err && agency) {
 				if (agency.verifyPasswordSync(pass)) {
 					callback(true, agency);
 				}
