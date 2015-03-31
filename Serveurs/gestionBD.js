@@ -685,12 +685,12 @@ io.on('connection', function(socket) {
 				}
 			},  function(err, arretsDuPoint) {
 				pointTmp.arrets = [];
-
+console.log('toto');
 				if(!err) {
 					// Récupération des lignes de chaque arrets
 					for(var k=0; k<arretsDuPoint.length; k++) {
 						arretTmp = arretsDuPoint[k];
-
+console.log(arretTmp._id);
 						arretLigneModel.find({'arretId': arretTmp._id}, function(err, lignesDeLArret) {
 							if(!err) {
 								arretTmp.lignes = lignesDeLArret;
@@ -731,9 +731,10 @@ function verifRoutes(points, callback) {
 						var ligne1 = points[p].arrets[a1].lignes[l1]._id,
 							ligne2 = points[p+1].arrets[a2].lignes[l2]._id;
 						
+
 						if(ligne1 == ligne2) {
 							routes.push({
-								points: [points[p], point[p+1]],
+								points: [points[p], points[p+1]],
 								arrets: [points[p].arrets[a1], points[p+1].arrets[a2]],
 								ligne: points[p].arrets[a1].lignes[l1]
 							});

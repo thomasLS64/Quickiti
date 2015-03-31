@@ -42,15 +42,13 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
         if (requestType == 'route') {
             console.log('La requète demandé est un itinéraire, envoie de la recherche à la BD');
             // demande à la base de donnée de calculé l'itinéraire et les informations stocké correspondantes
-            serveurRecuperationDonnees.emit('searchRoutesRealTime', request, callback);
-            /*
-            serverGestionBD.emit('searchRoute', request[0], request[1],
+            serverGestionBD.emit('searchRoutes', request[0], request[1],
                 function (err, routes) {
                     if(!err) {
                         if(routes.length > 0) {
                             console.log('Le ou les itinéraires sont reçus');
 
-                            *
+                            /*
                              ** description des paramètres de la fonction:
                              ** serveurRecuperationDonnees.emit('searchRealTime',
                              **                                 {routes : routes},
@@ -63,11 +61,10 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                              ** var stopStartAgency = [ line1[..], line2[..], .. , lineN[..] ] // agence de l'arrêt de départ
                              ** var line = [ (time1, vehicul1[..]), (time2, vehicul1[..]), .. , (timeN} // avec (timeN-time1 < 5) heures par exemple
                              ** je sais pas trop comment intégrer les véhicule
-                             *
+                             */
 
                             // Demande des horaires en temps réel au serveur de récupération de données
-                            serveurRecuperationDonnees.emit('searchRoutesRealTime',
-                                routes,
+                            serveurRecuperationDonnees.emit('searchRoutesRealTime', routes,
                                 function (err, routesRealTime) {
                                     if(!err) {
                                         console.log('Le temps réel est obtenu ou partiellement, callback des itinéraires reçus par le serveur de récupération de données');
@@ -92,9 +89,7 @@ io.on('connection', function (socket) { // socket pour avoir une instance diffé
                         console.log('Erreur dans la récuperation de l\'itineraire');
                         if (callback) callback(err);
                     }
-                }
-            );*/
-
+                });
         }
         else if (requestType == 'stopsNearTo') {
             console.log('La requète demandée est une recherche sur un lieu, envoie de la recherche à la BD');
