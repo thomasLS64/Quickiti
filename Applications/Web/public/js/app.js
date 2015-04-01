@@ -2,7 +2,7 @@ var app = {
 	// Fonction d'initialisation de l'application
 	initialize : function() {
 		// Périmètre de recherche par défaut
-		this.perimeter = 100;
+		this.perimeter = 1000;
 		
 		// Création de la carte
 		this.map = new QuickitiMap('map');
@@ -27,7 +27,7 @@ var app = {
 					}, app.perimeter], function(err, d) {
 						if(!err) {
 							if(d) {
-								for(var i=0; i<d.length; i++) {
+								for(var i in d) {
 									app.map.addMarker({
 										latitude: d[i].location[0],
 										longitude: d[i].location[1],
@@ -96,41 +96,56 @@ var app = {
 
 		e.preventDefault();
 
-		app.recupInformationsByAdress(locality, function(points) {
-			// Remise à zéro des markers
-			app.map.clearMarkers();
+		if(locality != '') {
+			app.recupInformationsByAdress(locality, function(points) {
+				// Remise à zéro des markers
+				app.map.clearMarkers();
 
-			for(var i=0; i<points.results.length; i++) {
-				// Ajout du marker sur la carte
-				app.map.addMarker({
-					latitude: points.results[i].geometry.location.lat,
-					longitude: points.results[i].geometry.location.lng,
-					message: points.results[i].formatted_address
-				});
-				app.map.centerMarkers();
+				for(var i=0; i<points.results.length; i++) {
+					// Ajout du marker sur la carte
+					app.map.addMarker({
+						latitude: points.results[i].geometry.location.lat,
+						longitude: points.results[i].geometry.location.lng,
+						message: points.results[i].formatted_address
+					});
 
-				// Demande des arrêts à proximités de ce dernier marker
-				socketWebServer.emit('request', 'stopsNearTo', [{
-					latitude: points.results[i].geometry.location.lat,
-					longitude: points.results[i].geometry.location.lng
-				}, app.perimeter], function(err, d) {
-					if(!err) {
-						if(d) {
-							for(var i=0; i<d.length; i++) {
-								app.map.addMarker({
-									latitude: d[i].location[0],
-									longitude: d[i].location[1],
-									message: '<strong>'+d[i].stop_name+'</strong>'
-								});
+					// Demande des arrêts à proximités de ce dernier marker
+					socketWebServer.emit('request', 'stopsNearTo', [{
+						latitude: points.results[i].geometry.location.lat,
+						longitude: points.results[i].geometry.location.lng
+					}, app.perimeter], function(err, stops) {
+						if(err)
+							console.log(err);
+						else {
+							if(stops) {
+								for(var s in stops) {
+									var lignes = '',
+										beforeLigne = '';
+
+									for(var l=0; l<stops[s].lignes.length; l++) {
+										console.log(beforeLigne+' - '+stops[s].lignes[l].trip_headsign);
+										if(beforeLigne != stops[s].lignes[l].trip_headsign) {
+											beforeLigne = stops[s].lignes[l].trip_headsign;
+											lignes += '<li>'+beforeLigne+'</li>';
+											console.log('AJOUT : '+beforeLigne);
+										}
+									}
+
+									app.map.addMarker({
+										latitude: stops[s].arret.location[0],
+										longitude: stops[s].arret.location[1],
+										message: '<strong style="text-transform: uppercase">['+stops[s].arret.stop_id+'] '+stops[s].arret.stop_name+'</strong><br><strong>Lignes</strong><br><ul style="margin-top: 0">'+lignes+'</ul>'
+									});
+								}
 							}
-							app.map.centerMarkers();
+							else
+								alert('Aucun arrêts trouvé');
 						}
-						else alert('Aucun arrêt n\'a été trouvé');
-					}
-					else console.log(err);
-				});
-			}
-		});
+						app.map.centerMarkers();
+					});
+				}
+			});
+		}
 	},
 
 	// Fonction à l'envoi du formulaire de recherche d'itinéraire
