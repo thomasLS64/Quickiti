@@ -64,7 +64,7 @@ QuickitiMap.prototype = {
 			var messageDom = '';
 
 			if(message.id || message.name) {
-				messageDom += '<div style="font-weight: bold;">';
+				messageDom += '<div style="font-weight: bold;text-align: center">';
 				if(message.id) messageDom += '['+message.id+']';
 				if(message.name) messageDom += ' '+message.name;
 				messageDom += '</div>';
