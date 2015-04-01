@@ -101,11 +101,11 @@ function createAgency(d, callback) {
 	var newAgency = new compagnieModel();
 
 	// Peuplement des différents champs
-	newAgency.agency_id = 0; //Euh
+	newAgency.agency_id = d.infoGenerales.agency_id;
 	newAgency.agency_name = d.infoGenerales.raisSocial;
 	newAgency.agency_url = d.infoGenerales.urlSiteWeb;
 	newAgency.agency_phone = d.infoGenerales.telephone;
-	newAgency.agency_lang = d.infoGenerales.pays; //À modifier
+	newAgency.agency_lang = d.infoGenerales.agency_lang;
 	newAgency.email = d.infoGenerales.email;
 	newAgency.password = d.infoGenerales.motDePasse;
 	newAgency.urlGTFSFile = d.gtfs.zipGTFS;
@@ -406,8 +406,8 @@ function searchStopsNearTo(point, distance, callback) {
 			console.log(err);
 		}
 		else {
-			console.log('[REUSSI] Recherche des arrêts à proximités (%d)', arretsDuPoint.length);
-			
+			arrets.push(arretsDuPoint);
+
 			for(var a=0; a<arretsDuPoint.length; a++) {
 				arretLigneModel.find({'arretId': arretsDuPoint[a]._id}, function(err, arretLignes) {
 					var lignesTmp = [];
@@ -417,7 +417,6 @@ function searchStopsNearTo(point, distance, callback) {
 						console.log(err);
 					}
 					else {
-						console.log('[REUSSI] Recherche des arrêts à proximités - Arret / Ligne');
 						arretsLignes.push(arretLignes);
 
 						for(var al=0; al<arretLignes.length; al++) {
@@ -427,7 +426,6 @@ function searchStopsNearTo(point, distance, callback) {
 									console.log(err);
 								}
 								else {
-									console.log('[REUSSI] Recherche des arrêts à proximités - Ligne');
 									lignes.push(ligne);
 									lignesTmp.push(ligne);
 
@@ -452,8 +450,18 @@ function searchStopsNearTo(point, distance, callback) {
 											arretsResultat.push(lignesResultat);
 										}
 
-										if(nbArrets == arretsDuPoint.length)
-											if(callback) callback(null, arretsResultat);
+										if(nbArrets == arretsDuPoint.length) {
+											var arretsResultatFinal = [];
+
+											for(var ar=0; ar<arretsResultat.length; ar++) {
+												var arretTmp = arrets[0][ar];
+												arretTmp.lignes = arretsResultat[ar];
+												arretsResultatFinal.push(arretTmp);
+											}
+
+											if(callback) callback(null, arretsResultatFinal);
+											console.log('[REUSSI] Recherche des arrêts à proximités')
+										}
 									}
 								}
 							});
