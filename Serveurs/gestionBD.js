@@ -102,6 +102,7 @@ function createAgency(d, callback) {
 
 	// Peuplement des différents champs
 	newAgency.agency_id = d.infoGenerales.agency_id;
+	newAgency.agency_timezone = d.infoGenerales.agency_timezone;
 	newAgency.agency_name = d.infoGenerales.raisSocial;
 	newAgency.agency_url = d.infoGenerales.urlSiteWeb;
 	newAgency.agency_phone = d.infoGenerales.telephone;
