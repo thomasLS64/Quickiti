@@ -26,14 +26,15 @@ var compagnieSchema = new mongoose.Schema({
 	agency_lang : String,
 	agency_fare_url : String,
 	agency_pays : String,
+	ville : String,
 	email : { type : String, match: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/ },
 	password : { type: String, bcrypt: true },
 	urlGTFSFile : String,
 	urlGTFSTripUpdate : String,
 	urlGTFSAlert : String,
 	urlGTFSVehiclePosition : String
-});
-compagnieSchema.plugin(require('mongoose-bcrypt'));
+}).plugin(require('mongoose-bcrypt'));
+
 //	Schéma d'une ligne
 var ligneSchema = new mongoose.Schema({
 	route_id : String,
