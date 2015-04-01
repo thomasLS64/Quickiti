@@ -25,6 +25,7 @@ var compagnieSchema = new mongoose.Schema({
 	agency_phone : String,
 	agency_lang : String,
 	agency_fare_url : String,
+	agency_pays : String,
 	email : { type : String, match: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/ },
 	password : { type: String, bcrypt: true },
 	urlGTFSFile : String,
@@ -102,15 +103,6 @@ function createAgency(d, callback) {
 	var newAgency = new compagnieModel();
 
 	// Peuplement des différents champs
-	newAgency.agency_id = d.infoGenerales.agency_id;
-	newAgency.agency_timezone = d.infoGenerales.agency_timezone;
-	newAgency.agency_name = d.infoGenerales.raisSocial;
-	newAgency.agency_url = d.infoGenerales.urlSiteWeb;
-	newAgency.agency_phone = d.infoGenerales.telephone;
-	newAgency.agency_lang = d.infoGenerales.agency_lang;
-	newAgency.agency_fare_url = d.infoGenerales.agency_fare_url;
-	newAgency.email = d.infoGenerales.email;
-	newAgency.password = d.infoGenerales.motDePasse;
 	newAgency.urlGTFSFile = d.gtfs.zipGTFS;
 	newAgency.urlGTFSTripUpdate = d.gtfs.addrGTFSTripUpdate;
 	newAgency.urlGTFSAlert = d.gtfs.addrGTFSAlert;
@@ -457,13 +449,16 @@ function searchStopsNearTo(point, distance, callback) {
 											var arretsResultatFinal = [];
 
 											for(var ar=0; ar<arretsResultat.length; ar++) {
-												var arretTmp = arrets[0][ar];
-												arretTmp.lignes = arretsResultat[ar];
-												arretsResultatFinal.push(arretTmp);
-											}
+												arretsResultatFinal.push({
+													arret : arrets[0][ar],
+													lignes : arretsResultat[ar]
+												});
 
-											if(callback) callback(null, arretsResultatFinal);
-											console.log('[REUSSI] Recherche des arrêts à proximités')
+												if(ar == arretsResultat.length-1) {
+													if(callback) callback(null, arretsResultatFinal);
+													console.log('[REUSSI] Recherche des arrêts à proximités');
+												}
+											}
 										}
 									}
 								}
@@ -474,6 +469,57 @@ function searchStopsNearTo(point, distance, callback) {
 			}
 		}
 	});
+}
+
+// Recherche d'itinéraires
+function searchRoutes(points, distance, callback) {
+	var arretsDuPoint = [];
+
+	console.log('[INFO] Appel : Recherche d\'itinéraires');
+
+	for(var p=0; p<points.length; p++) {
+		searchStopsNearTo(points[p], distance, function(err, stops) {
+			arretsDuPoint.push(stops);
+
+			if(arretsDuPoint.length == points.length) {
+				verifRoutes(arretsDuPoint, function(err, routes) {
+					callback(null, routes);
+				});
+			}
+		});
+	}
+}
+
+function verifRoutes(points, callback) {
+	var routes = [];
+
+	// Parcours des points du trajet
+	for(var p=0; p<points.length-1; p++) {
+		// Parcours des arrets du point i
+		for(var a1=0; a1<points[p].length; a1++) {
+			// Parcours des lignes de l'arrets a1 du point i
+			for(var l1=0; l1<points[p][a1].lignes.length; l1++) {
+				// Parcours des arrets du point i+1
+				for(var a2=0; a2<points[p+1].length; a2++) {
+					// Parcours des lignes de l'arret a2 du point i+1
+					for(var l2=0; l2<points[p+1][a2].lignes.length; l2++) {
+						var ligne1 = points[p][a1].lignes[l1],
+							ligne2 = points[p+1][a2].lignes[l2];
+						
+
+						if(JSON.stringify(ligne1._id) == JSON.stringify(ligne2._id)) {
+							routes.push({
+								arrets: [points[p][a1].arret, points[p+1][a2].arret],
+								ligne: ligne1
+							});
+						}
+					}
+				}
+			}
+		}
+	}
+
+	if(callback) callback(null, routes);
 }
 
 
@@ -638,97 +684,6 @@ io.on('connection', function(socket) {
 	**		socket.emit('searchRoutes', points, perimetre, callback);
 	*/
 	socket.on('searchRoutes', function(points, perimeter, callback) {
-		console.log('Route request');
-
-		var pointsItineraire = [],
-			arretTmp;
-
-		for(var p=0; p<points.length; p++) {
-			var pointTmp = points[p];
-
-			arretModel.find({
-				'location': {
-					$nearSphere: {
-						$geometry: {
-							type : "Point",
-							coordinates : [ points[p].latitude, points[p].longitude ]
-						},
-						$minDistance: 0,
-						$maxDistance: perimeter
-					}
-				}
-			},  function(err, arretsDuPoint) {
-				console.log(arretsDuPoint);
-				pointTmp.arrets = [];
-
-				if(!err) {
-					// Récupération des lignes de chaque arrets
-					for(var a=0; a<arretsDuPoint.length; a++) {
-						arretTmp = arretsDuPoint[a];
-
-						arretLigneModel.find({'arretId': arretTmp._id}, function(err, lignesPassantParArret) {
-							if(!err) {
-								for(var l=0; l<lignesPassantParArret.length; l++) {
-									var lignes = [];
-
-
-									ligneModel.findById(lignesPassantParArret[l].ligneId, function(err, ligne) {
-										lignes.push(ligne);
-
-										if(lignesPassantParArret.length == lignes.length) {
-											arretTmp.lignes = lignes;
-											pointTmp.arrets.push(arretTmp);
-											pointsItineraire.push(pointTmp);
-
-											if(pointsItineraire.length == points.length) {
-												verifRoutes(pointsItineraire, function(err, d) {
-													if(callback) callback(err, d);
-												});
-											}
-										}
-									});
-								}
-							}
-						});
-
-					}
-				}
-				else {
-					if(callback) callback(err, null);
-				}
-			});
-		}
+		searchRoutes(points, perimeter, callback);
 	});
 });
-
-function verifRoutes(points, callback) {
-	var routes = [];
-
-	// Parcours des points du trajet
-	for(var p=0; p<points.length-1; p++) {
-		// Parcours des arrets du point i
-		for(var a1=0; a1<points[p].arrets.length; a1++) {
-			// Parcours des lignes de l'arrets a1 du point i
-			for(var l1=0; l1<points[p].arrets[a1].lignes.length; l1++) {
-				// Parcours des arrets du point i+1
-				for(var a2=0; a2<points[p+1].arrets.length; a2++) {
-					// Parcours des lignes de l'arret a2 du point i+1
-					for(var l2=0; l2<points[p+1].arrets[a2].lignes.length; l2++) {
-						var ligne1 = points[p].arrets[a1].lignes[l1],
-							ligne2 = points[p+1].arrets[a2].lignes[l2];
-						
-
-						if(ligne1._id == ligne2._id) {
-							routes.push({
-								arrets: [points[p].arrets[a1], points[p+1].arrets[a2]],
-								ligne: ligne1
-							});
-						}
-					}
-				}
-			}
-		}
-	}
-
-	if(callback) callback(null, routes);
-}
