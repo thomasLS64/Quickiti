@@ -93,129 +93,407 @@ var vehiculeModel = mongoose.model('vehicule', vehiculeSchema);
 
 
 /*
+**	Fonctions pour la BD
+*/
+// Compagnie de transport - Création
+function createAgency(d, callback) {
+	// Initialisation de la nouvelle compagnie
+	var newAgency = new compagnieModel();
+
+	// Peuplement des différents champs
+	newAgency.agency_id = 0; //Euh
+	newAgency.agency_name = d.infoGenerales.raisSocial;
+	newAgency.agency_url = d.infoGenerales.urlSiteWeb;
+	newAgency.agency_phone = d.infoGenerales.telephone;
+	newAgency.agency_lang = d.infoGenerales.pays; //À modifier
+	newAgency.email = d.infoGenerales.email;
+	newAgency.password = d.infoGenerales.motDePasse;
+	newAgency.urlGTFSFile = d.gtfs.zipGTFS;
+	newAgency.urlGTFSTripUpdate = d.gtfs.addrGTFSTripUpdate;
+	newAgency.urlGTFSAlert = d.gtfs.addrGTFSAlert;
+	newAgency.urlGTFSVehiclePosition = d.gtfs.addrGTFSVehiclePosition;
+
+	// Insertion en base de données
+	newAgency.save(function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Compagnie de transport - SAVE');
+			console.log(err);
+			if(callback) callback(false, null);
+		}
+		else {
+			console.log('[REUSSI] Compagnie de transport - SAVE');
+			if(callback) callback(true, d);
+		}
+	});
+}
+// Compagnie de transport - Mise à jour
+function updateAgency(query, update, callback) {
+	compagnieModel.findOneAndUpdate(query, update, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Compagnie de transport - UPDATE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Compagnie de transport - UPDATE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Compagnie de transport - Récupération
+function selectAgencies(query, callback) {
+	compagnieModel.find(query, function(err, compagnie) {
+		if(err) {
+			console.log('[ERREUR] Compagnie de transport - SELECT');
+			console.log(err);
+		}
+		else
+			console.log('[REUSSI] Compagnie de transport - SELECT');
+
+		if(callback) callback(err, compagnie);
+	});
+}
+
+// Ligne - Création
+function createLine(d, callback) {
+	// Initialisation de la nouvelle ligne
+	var newLine = new ligneModel();
+
+	// Peuplement des différents champs
+	newLine.route_id = d.route_id;
+	newLine.route_short_name = d.route_short_name;
+	newLine.route_long_name = d.route_long_name;
+	newLine.route_desc = d.route_desc;
+	newLine.route_type = d.route_type;
+	newLine.service_id = d.service_id;
+	newLine.trip_id = d.trip_id;
+	newLine.trip_headsign = d.trip_headsign;
+	newLine.compagnieId = d.compagnieId;
+
+	// Insertion en base de données
+	newLine.save(function(err) {
+		if(err) {
+			console.log('[ERREUR] Ligne - SAVE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Ligne - SAVE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Ligne - Mise à jour
+function updateLine(query, update, callback) {
+	ligneModel.findOneAndUpdate(query, update, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Ligne - UPDATE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Ligne - UPDATE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Ligne - Récupération
+function selectLines(query, callback) {
+	ligneModel.find(query, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Ligne - SELECT');
+			console.log(err);
+		}
+		else 
+			console.log('[REUSSI] Ligne - SELECT');
+
+		if(callback) callback(err, d);
+	});
+}
+
+// Arret - Création
+function createStop(d, callback) {
+	// Initialisation du nouvel arret
+	var newStop = new arretModel();
+
+	// Peuplement des différents champs
+	newStop.stop_id = d.stop_id;
+	newStop.stop_name = d.stop_name;
+	newStop.stop_desc = d.stop_desc;
+	newStop.stop_url = d.stop_url;
+	newStop.location_type = d.location_type;
+	newStop.location = [d.stop_lat, d.stop_lon];
+	newStop.compagnieId = d.compagnieId;
+
+	// Insertion en base de données
+	newStop.save(function(err) {
+		if(err) {
+			console.log('[ERREUR] Arret - SAVE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Arret - SAVE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Arret - Mise à jour
+function updateStop(query, update, callback) {
+	arretModel.findOneAndUpdate(query, update, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Arret - UPDATE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Arret - UPDATE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Arret - Récupération
+function selectStops(query, callback) {
+	arretModel.find(query, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Arret - SELECT');
+			console.log(err);
+		}
+		else
+			console.log('[REUSSI] Arret - SAVE');
+
+		if(callback) callback(err, d);
+	});
+}
+
+// Relation Arret / Ligne - Création
+function createStopLine(d, callback) {
+	// Initialisation du nouveau lien
+	var newStopLine = new arretLigneModel();
+
+	// Peuplement des différents champs
+	newStopLine.arretId = d.arretId;
+	newStopLine.ligneId = d.ligneId;
+	newStopLine.arrival_time = d.arrival_time;
+	newStopLine.departure_time = d.departure_time;
+	newStopLine.stop_sequence = d.stop_sequence;
+	newStopLine.pickup_type = d.pickup_type;
+	newStopLine.drop_off_type = d.drop_off_type;
+	newStopLine.timepoint = d.timepoint;
+	newStopLine.compagnieId = d.compagnieId;
+
+	// Insertion en base de données
+	newStopLine.save(function(err) {
+		if(err) {
+			console.log('[ERREUR] Relation Arret / Ligne - SAVE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Relation Arret / Ligne - SAVE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Relation Arret / Ligne - Mise à jour
+function updateStopLine(query, update, callback) {
+	arretLigneModel.findOneAndUpdate(query, update, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Relation Arret / Ligne - UPDATE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[ERREUR] Relation Arret / Ligne - UPDATE');
+			if(callback) callback(true);
+		}
+	});
+}
+// Relation Arret / Ligne - Récupération
+function selectStopsLines(query, callback) {
+	arretLigneModel.find(query, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Relation Arret / Ligne - SELECT');
+			console.log(err);
+		}
+		else
+			console.log('[ERREUR] Relation Arret / Ligne - SELECT');
+
+		if(callback) callback(err, d);
+	});
+}
+
+// Vehicule - Création
+function createVehicle(d, callback) {
+	// Initialisation du nouveau véhicule
+	var newVehicle = new vehiculeModel();
+
+	// Peuplement des différents champs
+	newVehicle.longitude = d.longitude;
+	newVehicle.latitude = d.latitude;
+	newVehicle.ligneId = d.ligneId;
+	newVehicle.compagnieId = d.compagnieId;
+
+	// Insertion en base de données
+	newVehicle.save(function(err) {
+		if(err) {
+			console.log('[ERREUR] Vehicule - SAVE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Vehicule - SAVE');
+			if(callback) callback(true);
+		}
+	});
+}
+
+// Vehicule - Mise à jour
+function updateVehicle(query, update, callback) {
+	vehiculeModel.findOneAndUpdate(query, update, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Vehicule - UPDATE');
+			console.log(err);
+			if(callback) callback(false);
+		}
+		else {
+			console.log('[REUSSI] Vehicule - UPDATE');
+			if(callback) callback(true);
+		}
+	});
+}
+
+// Vehicule - Récupération
+function selectVehicles(query, callback) {
+	vehiculeModel.find(query, function(err, d) {
+		if(err) {
+			console.log('[ERREUR] Vehicule - SELECT');
+			console.log(err);
+		}
+		else
+			console.log('[REUSSI] Vehicule - SELECT');
+
+		if(callback) callback(err, d);
+	});
+}
+
+/*
+**	Fonctions supplémentaires
+*/
+// Recherche des arrêts à proximités
+function searchStopsNearTo(point, distance, callback) {
+	var arrets = [],
+		lignes = [],
+		arretsLignes = [];
+
+	console.log('[INFO] Appel : Recherche des arrêts à proximités');
+
+	arretModel.find({
+		'location': {
+			$nearSphere: {
+				$geometry: {
+					type : "Point",
+					coordinates : [ point.latitude, point.longitude ]
+				},
+				$minDistance: 0,
+				$maxDistance: distance
+			}
+		}
+	}, function(err, arretsDuPoint) {
+		if(err) {
+			console.log('[ERREUR] Recherche des arrêts à proximités - Arrets');
+			console.log(err);
+		}
+		else {
+			console.log('[REUSSI] Recherche des arrêts à proximités (%d)', arretsDuPoint.length);
+			
+			for(var a=0; a<arretsDuPoint.length; a++) {
+				arretLigneModel.find({'arretId': arretsDuPoint[a]._id}, function(err, arretLignes) {
+					if(err) {
+						console.log('[ERREUR] Recherche des arrêts à proximités - Arret / Ligne');
+						console.log(err);
+					}
+					else {
+						console.log('[REUSSI] Recherche des arrêts à proximités - Arret / Ligne');
+						arretsLignes.push(arretLignes);
+
+						for(var al=0; al<arretLignes.length; al++) {
+							ligneModel.findOne({'_id': arretLignes[al].ligneId }, function(err, ligne) {
+								if(err) {
+									console.log('[ERREUR] Recherche des arrêts à proximités - Ligne');
+									console.log(err);
+								}
+								else {
+									console.log('[REUSSI] Recherche des arrêts à proximités - Ligne');
+									lignes.push(ligne);
+
+									if(lignes.length == arretLignes.length) {
+										var lignesResultats = [];
+
+					console.log('FIN')					
+										for(var al1=0; al1<arretsLignes.length; al1++) {
+											for(var al2=0; al2<arretsLignes[al1].length; al2++) {
+												var ligneActuelleId = arretsLignes[al1][al2].ligneId;
+console.log(' ');
+console.log(arretsLignes[al1][al2]);
+												for(var l1=0; l1<lignes.length; l1++) {
+													//console.log(ligneActuelleId+' - '+lignes[l1]._id);
+
+													if(arretsLignes[al1][al2].ligneId == lignes[l1]._id) {
+														console.log('CORRESPONDANCE')
+													}
+												}
+											}
+										}
+									}
+								}
+							});
+						}
+					}
+				});
+			}
+		}
+
+		//if(callback) callback(err, arrets);
+	});
+}
+
+
+
+/*
 **	Traitement des sockets
 */
 // Nouvelle connexion de socket
 io.on('connection', function(socket) {
 	console.log('Client : connect');
+
 	/*
-	**	Compagnie de transport
-	**	----------------------
-	**
-	**	Création d'une compagnie
-	**
-	**		socket.emit('createAgency', {
-	**			email : "...",
-	**			password : "...",
-	**			agency_id : "...",
-	**			agency_name : "...",
-	**			agency_url : "...",
-	**			agency_timezone : "...",
-	**			agency_phone : "...",
-	**			agency_lang : "..."
-	**		});
+	**	COMPAGNIE DE TRANSPORT
 	*/
+	// Sockets de base
+	// Compagnie de transport - Création
 	socket.on('createAgency', function(d, callback) {
-		// Initialisation de la nouvelle compagnie
-		var newAgency = new compagnieModel();
-		console.log("Inscription d'une compagnie...");
-		// Peuplement des différents champs
-		newAgency.agency_id = 0; //Euh
-		newAgency.agency_name = d.infoGenerales.raisSocial;
-		newAgency.agency_url = d.infoGenerales.urlSiteWeb;
-		newAgency.agency_phone = d.infoGenerales.telephone;
-		newAgency.agency_lang = d.infoGenerales.pays; //À modifier
-		newAgency.email = d.infoGenerales.email;
-		newAgency.password = d.infoGenerales.motDePasse;
-		newAgency.urlGTFSFile = d.gtfs.zipGTFS;
-		newAgency.urlGTFSTripUpdate = d.gtfs.addrGTFSTripUpdate;
-		newAgency.urlGTFSAlert = d.gtfs.addrGTFSAlert;
-		newAgency.urlGTFSVehiclePosition = d.gtfs.addrGTFSVehiclePosition;
-		console.log("Sauvegarde de la compagnie...");
-		// Insertion en base de données
-		newAgency.save(function(err) {
-			if(err) {
-				console.log('Database Agency creation : false');
-				if(callback) callback(false);
-			}
-			else {
-				console.log('Database Agency creation : true');
-				if(callback) callback(true);
-			}
-		});
+		createAgency(d, callback);
 	});
 
-	/*
-	**	Mise à jour d'une compagnie
-	**
-	**		query = {
-	**			email : "...",
-	**			password : "...",
-	**			agency_id : "...",
-	**			agency_name : "...",
-	**			agency_url : "...",
-	**			agency_timezone : "...",
-	**			agency_phone : "...",
-	**			agency_lang : "..."
-	**		}
-	**		update = {
-	**			email : "...",
-	**			password : "...",
-	**			agency_id : "...",
-	**			agency_name : "...",
-	**			agency_url : "...",
-	**			agency_timezone : "...",
-	**			agency_phone : "...",
-	**			agency_lang : "..."
-	**		}
-	**
-	**		socket.emit('updateAgency', query, update);
-	*/
+	// Compagnie de transport - Mise à jour
 	socket.on('updateAgency', function(query, update, callback) {
-		compagnieModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err) {
-				console.log('Database Agency update : false');
-				if(callback) callback(false);
-			}
-			else {
-				console.log('Database Agency update : true');
-				if(callback) callback(true);
-			}
-		});
+		updateAgency(query, update, callback);
 	});
 
-	/*
-	**	Récupération des compagnies
-	**
-	**		query = {
-	**			email : "...",
-	**			password : "...",
-	**			agency_id : "...",
-	**			agency_name : "...",
-	**			agency_url : "...",
-	**			agency_timezone : "...",
-	**			agency_phone : "...",
-	**			agency_lang : "..."
-	**		}
-	**
-	**		socket.emit('selectAgencies', query, callback);
-	*/
+	// Compagnie de transport - Récupération
 	socket.on('selectAgencies', function(query, callback) {
-		compagnieModel.find(query, function(err, d) {
-			if(err)
-				console.log('Database Agencies select : false');
-			else
-				console.log('Database Agencies select : true');
-			if(callback) callback(err, d);
-		});
+		selectAgencies(query, callback);
 	});
 
+	// Socket supplémentaire
 	/*
-		loginAgency
-		return bool :
-		true : logged
-		false : not logged
-	 */
+	**	Compagnie de transport - Login
+	**		return [Boolean]
+	**
+	**	[Boolean] -> true  (Compagnie connectée)
+	**	[Boolean] -> false (Compagnie non connectée)
+	*/
 	socket.on('loginAgency', function (email, pass, callback) {
 		compagnieModel.findOne({ email: email }, function (err, agency) {
 			if (!err && agency) {
@@ -230,405 +508,90 @@ io.on('connection', function(socket) {
 		});
 	});
 
+
 	/*
-	**	Ligne
-	**	----------------------
-	**
-	**	Création d'une ligne
-	**
-	**		socket.emit('createLine', {
-	**			route_id : "...",
-	**			route_short_name : "...",
-	**			route_long_name : "...",
-	**			route_desc : "...",
-	**			route_type : "...",
-	**			service_id : "...",
-	**			trip_id : "...",
-	**			trip_headsign : "...",
-	**			compagnieId : "..."
-	**		});
+	**	LIGNE
 	*/
+	// Sockets de base
+	// Ligne - Création
 	socket.on('createLine', function(d, callback) {
-		// Initialisation de la nouvelle ligne
-		var newLine = new ligneModel();
-
-		// Peuplement des différents champs
-		newLine.route_id = d.route_id;
-		newLine.route_short_name = d.route_short_name;
-		newLine.route_long_name = d.route_long_name;
-		newLine.route_desc = d.route_desc;
-		newLine.route_type = d.route_type;
-		newLine.service_id = d.service_id;
-		newLine.trip_id = d.trip_id;
-		newLine.trip_headsign = d.trip_headsign;
-		newLine.compagnieId = d.compagnieId;
-
-		// Insertion en base de données
-		newLine.save(function(err) {
-			if(err) {
-				console.log('Database Line creation : false');
-			}
-			else {
-				console.log('Database Line creation : true');
-			}
-			if(callback) callback(err);
-		});
+		createLine(d, callback);
 	});
 
-	/*
-	**	Mise à jour d'une ligne
-	**
-	**		query = {
-	**			route_id : "...",
-	**			route_short_name : "...",
-	**			route_long_name : "...",
-	**			route_desc : "...",
-	**			route_type : "...",
-	**			service_id : "...",
-	**			trip_id : "...",
-	**			trip_headsign : "...",
-	**			compagnieId : "..."
-	**		}
-	**		update = {
-	**			route_id : "...",
-	**			route_short_name : "...",
-	**			route_long_name : "...",
-	**			route_desc : "...",
-	**			route_type : "...",
-	**			service_id : "...",
-	**			trip_id : "...",
-	**			trip_headsign : "...",
-	**			compagnieId : "..."
-	**		}
-	**
-	**		socket.emit('updateLine', query, update);
-	*/
+	// Ligne - Mise à jour
 	socket.on('updateLine', function(query, update, callback) {
-		ligneModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err) {
-				console.log('Database Line update : false');
-			}
-			else {
-				console.log('Database Line update : true');
-			}
-			if(callback) callback(err);
-		});
+		updateLine(query, update, callback);
 	});
 
-	/*
-	**	Récupération des lignes
-	**
-	**		query = {
-	**			route_id : "...",
-	**			route_short_name : "...",
-	**			route_long_name : "...",
-	**			route_desc : "...",
-	**			route_type : "...",
-	**			service_id : "...",
-	**			trip_id : "...",
-	**			trip_headsign : "...",
-	**			compagnieId : "..."
-	**		}
-	**
-	**		socket.emit('selectLines', query, callback);
-	*/
+	// Ligne - Récupération
 	socket.on('selectLines', function(query, callback) {
-		ligneModel.find(query, function(err, d) {
-			if(err)
-				console.log('Database Lines select : false');
-			else
-				console.log('Database Lines select : true');
-			if(callback) callback(err, d);
-		});
+		selectLines(query, callback);
 	});
 
 
 	/*
-	**	Arret
-	**	----------------------
-	**
-	**	Création d'un arret
-	**
-	**		socket.emit('createStop', {
-	**			stop_id : "...",
-	**			stop_name : "...",
-	**			stop_desc : "...",
-	**			stop_lat : "...",
-	**			stop_lon : "...",
-	**			stop_url : "...",
-	**			location_type : "...",
-	**			compagnieId : "..."
-	**		});
+	**	ARRET
 	*/
+	// Sockets de base
+	// Arret - Création
 	socket.on('createStop', function(d, callback) {
-		// Initialisation du nouvel arret
-		var newStop = new arretModel();
-
-		// Peuplement des différents champs
-		newStop.stop_id = d.stop_id;
-		newStop.stop_name = d.stop_name;
-		newStop.stop_desc = d.stop_desc;
-		newStop.stop_url = d.stop_url;
-		newStop.location_type = d.location_type;
-		newStop.location = [d.stop_lat, d.stop_lon];
-		newStop.compagnieId = d.compagnieId;
-
-		// Insertion en base de données
-		newStop.save(function(err) {
-			if(err) {
-				console.log('Database Stop creation : false');
-				if(callback) callback(err);
-			}
-			else {
-				console.log('Database Stop creation : true');
-				if(callback) callback(null);
-			}
-		});
+		createStop(d, callback);
 	});
 
-	/*
-	**	Mise à jour d'un arret
-	**
-	**		query = {
-	**			stop_id : "...",
-	**			stop_name : "...",
-	**			stop_desc : "...",
-	**			stop_lat : "...",
-	**			stop_lon : "...",
-	**			stop_url : "...",
-	**			location_type : "...",
-	**			compagnieId : "..."
-	**		}
-	**		update = {
-	**			stop_id : "...",
-	**			stop_name : "...",
-	**			stop_desc : "...",
-	**			stop_lat : "...",
-	**			stop_lon : "...",
-	**			stop_url : "...",
-	**			location_type : "...",
-	**			compagnieId : "..."
-	**		}
-	**
-	**		socket.emit('updateStop', query, update);
-	*/
+	// Arret - Mise à jour
 	socket.on('updateStop', function(query, update, callback) {
-		arretModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err) {
-				console.log('Database Stop update : false');
-			}
-			else {
-				console.log('Database Stop update : true');
-			}
-			if (callback) callback(err);
-		});
+		updateStop(query, update, callback);
 	});
 
-	/*
-	**	Récupération des arrets
-	**
-	**		query = {
-	**			stop_id : "...",
-	**			stop_name : "...",
-	**			stop_desc : "...",
-	**			stop_lat : "...",
-	**			stop_lon : "...",
-	**			stop_url : "...",
-	**			location_type : "...",
-	**			compagnieId : "..."
-	**		}
-	**
-	**		socket.emit('selectStops', query, callback);
-	*/
+	// Arret - Récupération
 	socket.on('selectStops', function(query, callback) {
-		arretModel.find(query, function(err, d) {
-			if(err)
-				console.log('Database Stop select : false');
-			else
-				console.log('Database Stop select : true');
-			if(callback) callback(err, d);
-		});
+		selectStops(query, callback);
 	});
 
 
 	/*
-	**	Arret et Ligne
-	**	----------------------
-	**
-	**	Création d'un lien entre arret et ligne
-	**
-	**		socket.emit('createStopLine', {
-	**			arretId : "...",
-	**			ligneId : "..."
-	**		});
+	**	RELATION ARRET / LIGNE
 	*/
+	// Sockets de base
+	// Relation Arret / Ligne - Création
 	socket.on('createStopLine', function(d, callback) {
-		// Initialisation du nouveau lien
-		var newStopLine = new arretLigneModel();
-
-		// Peuplement des différents champs
-		newStopLine.arretId = d.arretId;
-		newStopLine.ligneId = d.ligneId;
-		newStopLine.arrival_time = d.arrival_time;
-		newStopLine.departure_time = d.departure_time;
-		newStopLine.stop_sequence = d.stop_sequence;
-		newStopLine.pickup_type = d.pickup_type;
-		newStopLine.drop_off_type = d.drop_off_type;
-		newStopLine.timepoint = d.timepoint;
-		newStopLine.compagnieId = d.compagnieId;
-
-		// Insertion en base de données
-		newStopLine.save(function(err) {
-			if(err) {
-				console.log('Database link between Stop & Line creation : false');
-			}
-			else {
-				console.log('Database link between Stop & Line creation : true');
-			}
-			if(callback) callback(err);
-		});
+		createStopLine(d, callback);
 	});
 
-	/*
-	**	Mise à jour d'un lien entre arret et ligne
-	**
-	**		query = {
-	**			arretId : "...",
-	**			ligneId : "..."
-	**		}
-	**		update = {
-	**			arretId : "...",
-	**			ligneId : "..."
-	**		}
-	**
-	**		socket.emit('updateStopLine', query, update);
-	*/
+	// Relation Arret / Ligne - Mise à jour
 	socket.on('updateStopLine', function(query, update, callback) {
-		arretLigneModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err) {
-				console.log('Database link between Stop & Line update : false');
-			}
-			else {
-				console.log('Database link between Stop & Line update : true');
-			}
-			if(callback) callback(err);
-		});
+		updateStopLine(query, update, callback);
 	});
 
-	/*
-	**	Récupération des lien entre arrets et lignes
-	**
-	**		query = {
-	**			arretId : "...",
-	**			ligneId : "..."
-	**		}
-	**
-	**		socket.emit('selectStopsLines', query, callback);
-	*/
+	// Relation Arret / Ligne - Récupération
 	socket.on('selectStopsLines', function(query, callback) {
-		arretLigneModel.find(query, function(err, d) {
-			if(err)
-				console.log('Database link between Stop & Line select : false');
-			else
-				console.log('Database link between Stop & Line select : true');
-			if(callback) callback(err, d);
-		});
+		selectStopsLines(query, callback);
 	});
 
 
 	/*
-	**	Véhicule
-	**	----------------------
-	**
-	**	Création d'un véhicule
-	**
-	**		socket.emit('createVehicle', {
-	**			longitude = "...",
-	**			latitude = "...",
-	**			ligneId = "...",
-	**			compagnieId = "..."
-	**		});
+	**	VEHICULE
 	*/
+	// Sockets de base
+	// Vehicule - Création
 	socket.on('createVehicle', function(d, callback) {
-		// Initialisation du nouveau véhicule
-		var newVehicle = new vehiculeModel();
-
-		// Peuplement des différents champs
-		newVehicle.longitude = d.longitude;
-		newVehicle.latitude = d.latitude;
-		newVehicle.ligneId = d.ligneId;
-		newVehicle.compagnieId = d.compagnieId;
-
-		// Insertion en base de données
-		newVehicle.save(function(err) {
-			if(err) {
-				console.log('Database Vehicle creation : false');
-				if(callback) callback(false);
-			}
-			else {
-				console.log('Database Vehicle creation : true');
-				if(callback) callback(true);
-			}
-		});
+		createVehicle(d, callback);
 	});
 
-	/*
-	**	Mise à jour d'un véhicule
-	**
-	**		query = {
-	**			longitude = "...",
-	**			latitude = "...",
-	**			ligneId = "...",
-	**			compagnieId = "..."
-	**		}
-	**		update = {
-	**			longitude = "...",
-	**			latitude = "...",
-	**			ligneId = "...",
-	**			compagnieId = "..."
-	**		}
-	**
-	**		socket.emit('updateVehicle', query, update);
-	*/
+	// Vehicule - Mise à jour
 	socket.on('updateVehicle', function(query, update, callback) {
-		vehiculeModel.findOneAndUpdate(query, update, function(err, d) {
-			if(err) {
-				console.log('Database Vehicle update : false');
-				if(callback) callback(false);
-			}
-			else {
-				console.log('Database Vehicle update : true');
-				if(callback) callback(true);
-			}
-		});
+		updateVehicle(query, update, callback);
 	});
 
-	/*
-	**	Récupération des véhicules
-	**
-	**		query = {
-	**			longitude = "...",
-	**			latitude = "...",
-	**			ligneId = "...",
-	**			compagnieId = "..."
-	**		}
-	**
-	**		socket.emit('selectVehicles', query, callback);
-	*/
+	// Vehicule - Récupération
 	socket.on('selectVehicles', function(query, callback) {
-		vehiculeModel.find(query, function(err, d) {
-			if(err)
-				console.log('Database Vehicle select : false');
-			else
-				console.log('Database Vehicle select : true');
-			if(callback) callback(err, d);
-		});
+		selectVehicles(query, callback);
 	});
 
 
 
 	/*
-	**	Récupération des arrets selon ses coordonnées GPS et un périmètre
+	**	Récupération des arrets à proximité des coordonnées GPS du point, dans un périmètre donné
 	**
 	**		point = {
 	**			latitude : ...,
@@ -638,21 +601,7 @@ io.on('connection', function(socket) {
 	**		socket.emit('searchStopsNearTo', point, distance, callback);
 	*/
 	socket.on('searchStopsNearTo', function(point, distance, callback) {
-		console.log('simple request');
-		arretModel.find({
-			'location': {
-				$nearSphere: {
-					$geometry: {
-						type : "Point",
-						coordinates : [ point.latitude, point.longitude ]
-					},
-					$minDistance: 0,
-					$maxDistance: distance
-				}
-			}
-		}, function(err, d) {
-			if(callback) callback(err, d);
-		});
+		searchStopsNearTo(point, distance, callback);
 	});
 
 	/*
@@ -661,11 +610,10 @@ io.on('connection', function(socket) {
 	**		points = [];
 	**
 	**		points[0] = {
-	**			latitude : ...,
-	**			longitude : ...
+	**			latitude : [Number],
+	**			longitude : [Number]
 	**		};
 	**
-	**		...
 	**
 	**		points[n] = { ... };
 	**
