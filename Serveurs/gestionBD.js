@@ -24,6 +24,7 @@ var compagnieSchema = new mongoose.Schema({
 	agency_timezone : String,
 	agency_phone : String,
 	agency_lang : String,
+	agency_fare_url : String,
 	email : { type : String, match: /^[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+\.[a-zA-Z0-9-.]+$/ },
 	password : { type: String, bcrypt: true },
 	urlGTFSFile : String,
@@ -107,6 +108,7 @@ function createAgency(d, callback) {
 	newAgency.agency_url = d.infoGenerales.urlSiteWeb;
 	newAgency.agency_phone = d.infoGenerales.telephone;
 	newAgency.agency_lang = d.infoGenerales.agency_lang;
+	newAgency.agency_fare_url = d.infoGenerales.agency_fare_url;
 	newAgency.email = d.infoGenerales.email;
 	newAgency.password = d.infoGenerales.motDePasse;
 	newAgency.urlGTFSFile = d.gtfs.zipGTFS;
