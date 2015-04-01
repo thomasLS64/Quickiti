@@ -14,6 +14,7 @@ mongoose.connect('mongodb://localhost/quickiti', function(err) {
 	else
 		console.log('Database connexion : true');
 });
+
 // Création des différents schémas
 //	Schéma d'une compagnie de transport
 var compagnieSchema = new mongoose.Schema({
@@ -44,7 +45,7 @@ var ligneSchema = new mongoose.Schema({
 	trip_short_name: String,
 	direction_id: Number,
 	block_id: Number,
-	shape_id: Number,
+	shape_id: String,
 	wheelchair_accessible: Number,
 	bikes_allowed: Number,
 	compagnieId : Schema.ObjectId
@@ -691,6 +692,7 @@ io.on('connection', function(socket) {
 					}
 				}
 			},  function(err, arretsDuPoint) {
+				console.log(arretsDuPoint);
 				pointTmp.arrets = [];
 
 				if(!err) {

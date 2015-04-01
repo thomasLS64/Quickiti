@@ -218,6 +218,16 @@ app.use(express.static(__dirname + '/public'))
 		);
 
 	})
+	.get('/modifier', [requireLogin], function (req, res) {
+		res.render('pages/modification.ejs',
+			{
+				pageTitle: "Espace membre - Modifier ses informations",
+				pageHeader: "Modifier ses informations",
+				tabAct: "espmbr",
+				agency: req.session.agency,
+			}
+		);
+	})
 	.get('/deconnexion', [requireLogin], function(req, res) {
 		req.session = null;
 		res.redirect('/connexion');
@@ -236,6 +246,23 @@ io.on('connection', function(socket) {
 		console.log("Inscription d'une compagnie...");
 		socket.emit("userCallback", "Validation du formulaire en cours...", "info");
 		var formErrors = [];
+		if (typeof form.infoGenerales != "undefined") {
+			/*
+			 Validation de l'email de contact
+			 */
+			if (typeof form.infoGenerales.email == "undefined" || !validator.isEmail(form.infoGenerales.email)) {
+				formErrors.push("L'email de contact n'est pas définie, ou est incorrect.");
+			}
+			/*
+			 Validation du mot de passe
+			 */
+			if (typeof form.infoGenerales.motDePasse == "undefined") {
+				formErrors.push("Le mot de passe n'est pas définie, ou est incorrect.");
+			}
+		}
+		else {
+			formErrors.push("Les informations générales ne sont pas définies");
+		}
 		if (typeof form.gtfs != "undefined") {
 			if (typeof form.gtfs.zipGTFS == "undefined" || !validator.isURL(form.gtfs.zipGTFS)) {
 				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
@@ -259,7 +286,7 @@ io.on('connection', function(socket) {
 			}
 		}
 		else {
-			formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
+			formErrors.push("Les URLs des fichiers GTFS ne sont pas définies.");
 		}
 		if (formErrors.length != 0) {
 			socket.emit("userCallback", formErrors, "danger");
@@ -267,7 +294,17 @@ io.on('connection', function(socket) {
 			callback();
 		}
 		else {
-			clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, socket.id, callback);
+			clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback)
+				.on('userCallback', function (message, typeMessage) {
+						socket.emit('userCallback', message, typeMessage);
+					}
+				)
+					.on('error', function (e) {
+						console.log("Erreur");
+						socket.emit('userCallback', "Le serveur de récupération de donnée n'est pas disponible, merci de réessayer plus tard.", "error");
+					}
+				)
+			;
 		}
 	});
 	socket.on('updateAgency', function (form, callback) {
@@ -278,6 +315,7 @@ io.on('connection', function(socket) {
 		var formErrors = [];
 
 		if (typeof form.infoGenerales != "undefined") {
+
 			/*
 			 	Validation de l'adresse
 			*/
@@ -298,20 +336,7 @@ io.on('connection', function(socket) {
 			else {
 				formErrors.push("L'adresse n'est pas définie")
 			}
-			/*
-				Validation de la raison social
-			 */
-			if (typeof form.infoGenerales.raisSocial != "undefined" && validator.isLength(form.infoGenerales.raisSocial, 3, 60)) {
-				form.infoGenerales.raisSocial =
-					validator.stripLow( //On retire les caractère avec un code numérique < 32 et > 127 (caractères de controles)
-						validator.escape( //On échappe les caractères de balisages en HTML (< > & " ')
-							form.infoGenerales.raisSocial
-						)
-					);
-			}
-			else {
-				formErrors.push("La raison social n'est pas définie, ou est incorrect.");
-			}
+
 			/*
 				Validation de l'email de contact
 			*/

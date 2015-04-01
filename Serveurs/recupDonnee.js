@@ -151,7 +151,7 @@ io.on('connection', function (socket) {
 					socket.emit("userCallback", "Mise à jour des arrêts...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
-					async.eachLimit(GTFS.arret, 3,
+					async.eachLimit(GTFS.arret, 1,
 						function (stop, arretTermine) {
 							console.log("Insertion de " + stop.stop_id);
 							var newStop = {};
@@ -211,7 +211,7 @@ io.on('connection', function (socket) {
 					socket.emit("userCallback", "Mise à jour des lignes...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
-					async.eachLimit(GTFS.ligne, 3,
+					async.eachLimit(GTFS.ligne, 1,
 						function (ligne, ligneTermine) {
 							console.log("Insertion de " + ligne.route_id);
 
@@ -267,7 +267,7 @@ io.on('connection', function (socket) {
 					socket.emit("userCallback", "Mise à jour des trajets...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
 					//En limitant à 3 en même temps pour ne pas flooder la bdd
-					async.eachLimit(GTFS.trajet, 3,
+					async.eachLimit(GTFS.trajet, 1,
 						function (trajet, trajetTermine) {
 							console.log("Insertion de " + trajet.trip_id);
 							/* Dans l'ordre :
@@ -280,7 +280,7 @@ io.on('connection', function (socket) {
 										clientGestBD.emit(
 											'selectLines',  //On sélectionne les lignes
 											//Qui correspondent à ces critères
-											{ route_id: trajet.trip_id, compagnieId: agencyId },
+											{ trip_id: trajet.trip_id, compagnieId: agencyId },
 											verifTrajetExisteTermine // Callback
 										);
 									},
@@ -310,6 +310,7 @@ io.on('connection', function (socket) {
 						},
 						function (err) {
 							console.log("Traitement des trajets terminé.");
+							console.log(err);
 							updateBDTripTermine(err, GTFS);
 						}
 					);
@@ -319,8 +320,8 @@ io.on('connection', function (socket) {
 					console.log("Mise à jour des correspondances arrêts / ligne...");
 					socket.emit("userCallback", "Mise à jour des correspondances arrêts / ligne...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
-					//En limitant à 3 en même temps pour ne pas flooder la bdd
-					async.eachLimit(GTFS.arretLigne, 5,
+					//En limitant à 5 en même temps pour ne pas flooder la bdd
+					async.eachLimit(GTFS.arretLigne, 1,
 						function (arretLigne, arretLigneTermine) {
 							console.log("Insertion de la correspondance " + arretLigne.trip_id + "/" + arretLigne.stop_id);
 							/* Dans l'ordre :
@@ -346,7 +347,7 @@ io.on('connection', function (socket) {
 										clientGestBD.emit(
 											'selectStopsLines',  //On sélectionne les corr ligne/arrets
 											//Qui correspondent à ces critères
-											{ arretId: arret._id, ligneId: ligne._id },
+											{ arretId: arret._id, ligneId: ligne._id, stop_sequence: arretLigne.stop_sequence },
 											function (err, arretLigneTrouve) {
 												verifArretLigneExisteTermine(err, ligne, arret, arretLigneTrouve); // Callback
 											}

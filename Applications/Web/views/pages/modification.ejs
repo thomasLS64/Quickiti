@@ -2,10 +2,10 @@
 <div class="col-xs-12 col-sm-12 col-md-10 col-md-offset-1">
     <br />
     <div class="panel panel-default">
-        <div class="panel-heading">Formulaire d'inscription</div>
+        <div class="panel-heading">Formulaire de modification</div>
         <div class="panel-body">
             <!-- Formulaire d'inscription -->
-            <form id="formInscription" enctype='application/json' class="form-horizontal">
+            <form id="formModifs" enctype='application/json' class="form-horizontal">
                 <div class="panel panel-default">
                     <!-- Informations générales -->
                     <div class="panel-heading">Informations générales</div>
@@ -13,7 +13,7 @@
                         <div class="form-group">
                             <label for="inputRS" class="col-sm-3 control-label">Raison Social :</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" id="inputRS">
+                                <input type="text" value="<%= agency.agency_name %>" class="form-control" id="inputRS" disabled>
                             </div>
                         </div>
                         <div class="form-group">
@@ -131,13 +131,13 @@
                         <div class="form-group">
                             <label for="inputSite" class="col-sm-3 control-label">Site web de la compagnie :</label>
                             <div class="col-sm-9">
-                                <input type="url" class="form-control" id="inputSite" placeholder="">
+                                <input type="url" value="<%= agency.agency_url %>" class="form-control" id="inputSite" placeholder="" disabled>
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="inputTel" class="col-sm-3 control-label">Numéro de téléphone :</label>
                             <div class="col-sm-9">
-                                <input type="tel" class="form-control" id="inputTel" placeholder="">
+                                <input type="tel" class="form-control" value="<%= agency.agency_phone %>" id="inputTel" placeholder="" disabled>
                             </div>
                         </div>
                     </div>
@@ -149,7 +149,7 @@
                         <div class="form-group">
                             <label for="inputGTFSZipFile" class="col-sm-3 control-label">Adresse du fichier zip contenant tous les fichiers GTFS :</label>
                             <div class="col-sm-9">
-                                <input type="url" class="form-control" id="inputGTFSZipFile" placeholder="http://host/fichier.zip">
+                                <input type="url" class="form-control" value="<%= agency.urlGTFSFile %>" id="inputGTFSZipFile" placeholder="http://host/fichier.zip">
                             </div>
                         </div>
                         <div class="form-group">
@@ -161,24 +161,24 @@
                         <div class="form-group">
                             <label for="inputGTFSRealTimeTripUpdate" class="col-sm-3 control-label">Adresse du fichiers "TripUpdates" : </label>
                             <div class="col-sm-9">
-                                <input type="url" class="form-control" id="inputGTFSRealTimeTripUpdate" placeholder="http://host:port/TripUpdate.pb">
+                                <input type="url" class="form-control" value="<%= agency.urlGTFSTripUpdate %>" id="inputGTFSRealTimeTripUpdate" placeholder="http://host:port/TripUpdate.pb">
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="inputGTFSRealTimeAlert" class="col-sm-3 control-label">Adresse du fichiers "Alert" : </label>
                             <div class="col-sm-9">
-                                <input type="url" class="form-control" id="inputGTFSRealTimeAlert" placeholder="http://host:port/Alert.pb">
+                                <input type="url" class="form-control" value="<%= agency.urlGTFSAlert %>" id="inputGTFSRealTimeAlert" placeholder="http://host:port/Alert.pb">
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="inputGTFSRealVehiclePosition" class="col-sm-3 control-label">Adresse du fichiers "VehiclePosition" : </label>
                             <div class="col-sm-9">
-                                <input type="url" class="form-control" id="inputGTFSRealVehiclePosition" placeholder="http://host:port/VehiclePosition.pb">
+                                <input type="url" class="form-control" value="<%= agency.urlGTFSVehiclePosition %>" id="inputGTFSRealVehiclePosition" placeholder="http://host:port/VehiclePosition.pb">
                             </div>
                         </div>
                     </div>
                 </div>
-                <button type="submit" id="submitInscription" class="pull-right btn btn-default">S'inscrire</button>
+                <button type="submit" id="submitInscription" class="pull-right btn btn-default">Enregistrer les modifications</button>
                 <!-- Zone de retour pour l'utilisateur -->
                 <div id="messageInfo" class="bg-info hidden">
 

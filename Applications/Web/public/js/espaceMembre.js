@@ -29,9 +29,9 @@ socketWebServer = io("http://127.0.0.1:8080")
        });
 //Evenement qui se déclanche quand la page est chargée
 document.addEventListener("DOMContentLoaded", function () {
-    if (document.getElementById("formInscription")) {
+    if (document.getElementById("formModifs")) {
         //Evenement qui se déclanche quand on valide le formulaire
-        document.getElementById("formInscription").addEventListener("submit", function (event) {
+        document.getElementById("formModifs").addEventListener("submit", function (event) {
             //On arrête la propagation de l'evenement de l'envoi du formulaire et on empèche le navigateur d'agir
             event.preventDefault();
             //On informe l'utilisateur qu'on envoi le formulaire
