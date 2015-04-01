@@ -134,7 +134,11 @@ var app = {
 									app.map.addMarker({
 										latitude: stops[s].arret.location[0],
 										longitude: stops[s].arret.location[1],
-										message: '<strong style="text-transform: uppercase">['+stops[s].arret.stop_id+'] '+stops[s].arret.stop_name+'</strong><br><strong>Lignes</strong><br><ul style="margin-top: 0">'+lignes+'</ul>'
+										message: {
+											id: stops[s].arret.stop_id,
+											name: stops[s].arret.stop_name,
+											content: '<strong>Lignes</strong><ul style="margin-top: 0">'+lignes+'</ul>'
+										}
 									});
 								}
 							}

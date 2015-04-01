@@ -51,14 +51,31 @@ QuickitiMap.prototype = {
 	addMarker : function(marker) {
 		this.map.addLayer(
 			this.markers.addLayer(
-				L.marker(
-					[marker.latitude, marker.longitude]
-				).bindPopup(
-					marker.message
-				).openPopup()
+				L.marker([marker.latitude, marker.longitude])
+				 .bindPopup(this.createMessage(marker.message))
+				 .openPopup()
 			)
 		);
 		return this;
+	},
+
+	createMessage : function(message) {
+		if(typeof message == 'object') {
+			var messageDom = '';
+
+			if(message.id || message.name) {
+				messageDom += '<div style="font-weight: bold;">';
+				if(message.id) messageDom += '['+message.id+']';
+				if(message.name) messageDom += ' '+message.name;
+				messageDom += '</div>';
+			}
+
+			if(message.content) messageDom += '<div style="margin-top: 10px">'+message.content+'</div>';
+		}
+		else messageDom = '<div style="font-weight: bold;text-align: center">'+message+'</div>';
+
+
+		return messageDom;
 	},
 	
 	clearMarkers : function() {
