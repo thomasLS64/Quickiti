@@ -384,7 +384,8 @@ function selectVehicles(query, callback) {
 function searchStopsNearTo(point, distance, callback) {
 	var arrets = [],
 		lignes = [],
-		arretsLignes = [];
+		arretsLignes = [],
+		nbArrets = 0;
 
 	console.log('[INFO] Appel : Recherche des arrêts à proximités');
 
@@ -409,6 +410,8 @@ function searchStopsNearTo(point, distance, callback) {
 			
 			for(var a=0; a<arretsDuPoint.length; a++) {
 				arretLigneModel.find({'arretId': arretsDuPoint[a]._id}, function(err, arretLignes) {
+					var lignesTmp = [];
+
 					if(err) {
 						console.log('[ERREUR] Recherche des arrêts à proximités - Arret / Ligne');
 						console.log(err);
@@ -426,25 +429,31 @@ function searchStopsNearTo(point, distance, callback) {
 								else {
 									console.log('[REUSSI] Recherche des arrêts à proximités - Ligne');
 									lignes.push(ligne);
+									lignesTmp.push(ligne);
 
-									if(lignes.length == arretLignes.length) {
-										var lignesResultats = [];
+									if(lignesTmp.length == arretLignes.length) {
+										nbArrets++;
 
-					console.log('FIN')					
+										var arretsResultat = [];
+
 										for(var al1=0; al1<arretsLignes.length; al1++) {
-											for(var al2=0; al2<arretsLignes[al1].length; al2++) {
-												var ligneActuelleId = arretsLignes[al1][al2].ligneId;
-console.log(' ');
-console.log(arretsLignes[al1][al2]);
-												for(var l1=0; l1<lignes.length; l1++) {
-													//console.log(ligneActuelleId+' - '+lignes[l1]._id);
+											var lignesResultat = [];
 
-													if(arretsLignes[al1][al2].ligneId == lignes[l1]._id) {
-														console.log('CORRESPONDANCE')
+											for(var al2=0; al2<arretsLignes[al1].length; al2++) {
+												var ligneActuelleId = JSON.stringify(arretsLignes[al1][al2].ligneId);
+
+												for(var l1=0; l1<lignes.length; l1++) {
+													if(ligneActuelleId == JSON.stringify(lignes[l1]._id)) {
+														lignesResultat.push(lignes[l1]);
 													}
 												}
 											}
+
+											arretsResultat.push(lignesResultat);
 										}
+
+										if(nbArrets == arretsDuPoint.length)
+											if(callback) callback(null, arretsResultat);
 									}
 								}
 							});
@@ -453,8 +462,6 @@ console.log(arretsLignes[al1][al2]);
 				});
 			}
 		}
-
-		//if(callback) callback(err, arrets);
 	});
 }
 
