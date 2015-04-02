@@ -6,12 +6,13 @@
         <div class="panel-body">
             <!-- Formulaire d'inscription -->
             <form id="formModifs" enctype='application/json' class="form-horizontal">
+                <input type="hidden" value="<%= agency._id %>" id="inputIdAgency" />
                 <div class="panel panel-default">
                     <!-- Informations générales -->
                     <div class="panel-heading">Informations générales</div>
                     <div class="panel-body">
                         <div class="form-group">
-                            <label for="inputRS" class="col-sm-3 control-label">Raison Social :</label>
+                            <label for="inputRS" class="col-sm-3 control-label">Raison Sociale :</label>
                             <div class="col-sm-9">
                                 <input type="text" value="<%= agency.agency_name %>" class="form-control" id="inputRS" disabled>
                             </div>
@@ -19,7 +20,7 @@
                         <div class="form-group">
                             <label for="inputEmail" class="col-sm-3 control-label">Email de contact :</label>
                             <div class="col-sm-9">
-                                <input type="email" class="form-control" id="inputEmail">
+                                <input type="email" value="<%= agency.email %>" class="form-control" id="inputEmail">
                             </div>
                         </div>
                         <div class="form-group">
@@ -31,86 +32,86 @@
                         <div class="form-group">
                             <label for="inputAddr" class="col-sm-3 control-label">Adresse du siège :</label>
                             <div class="col-sm-9">
-                                <input type="text" class="form-control" id="inputAddr">
+                                <input type="text" class="form-control" value="<%= agency.email %>" id="inputAddr">
                             </div>
                         </div>
                         <div class="form-group">
                             <label for="selectPays" class="col-sm-3 control-label">Pays :</label>
                             <div class="col-sm-9">
                                 <select id="selectPays" class="form-control">
-                                    <option value="AD">Andorra</option>
-                                    <option value="AR">Argentina</option>
-                                    <option value="AS">American Samoa</option>
-                                    <option value="AD">Andorra</option>
-                                    <option value="AR">Argentina</option>
-                                    <option value="AS">American Samoa</option>
-                                    <option value="AT">Austria</option>
-                                    <option value="AU">Australia</option>
-                                    <option value="BD">Bangladesh</option>
-                                    <option value="BE">Belgium</option>
-                                    <option value="BG">Bulgaria</option>
-                                    <option value="BR">Brazil</option>
-                                    <option value="CA">Canada</option>
-                                    <option value="CH">Switzerland</option>
-                                    <option value="CZ">Czech Republic</option>
-                                    <option value="DE">Germany</option>
-                                    <option value="DK">Denmark</option>
-                                    <option value="DO">Dominican Republic</option>
-                                    <option value="ES">Spain</option>
-                                    <option value="FI">Finland</option>
-                                    <option value="FO">Faroe Islands</option>
-                                    <option value="FR">France</option>
-                                    <option value="GB">Great Britain</option>
-                                    <option value="GF">French Guyana</option>
-                                    <option value="GG">Guernsey</option>
-                                    <option value="GL">Greenland</option>
-                                    <option value="GP">Guadeloupe</option>
-                                    <option value="GT">Guatemala</option>
-                                    <option value="GU">Guam</option>
-                                    <option value="GY">Guyana</option>
-                                    <option value="HR">Croatia</option>
-                                    <option value="HU">Hungary</option>
-                                    <option value="IM">Isle of Man</option>
-                                    <option value="IN">India</option>
-                                    <option value="IS">Iceland</option>
-                                    <option value="IT">Italy</option>
-                                    <option value="JE">Jersey</option>
-                                    <option value="JP">Japan</option>
-                                    <option value="LI">Liechtenstein</option>
-                                    <option value="LK">Sri Lanka</option>
-                                    <option value="LT">Lithuania</option>
-                                    <option value="LU">Luxembourg</option>
-                                    <option value="MC">Monaco</option>
-                                    <option value="MD">Moldavia</option>
-                                    <option value="MH">Marshall Islands</option>
-                                    <option value="MK">Macedonia</option>
-                                    <option value="MP">Northern Mariana Islands</option>
-                                    <option value="MQ">Martinique</option>
-                                    <option value="MX">Mexico</option>
-                                    <option value="MY">Malaysia</option>
-                                    <option value="NL">Holland</option>
-                                    <option value="NO">Norway</option>
-                                    <option value="NZ">New Zealand</option>
-                                    <option value="PH">Phillippines</option>
-                                    <option value="PK">Pakistan</option>
-                                    <option value="PL">Poland</option>
-                                    <option value="PM">Saint Pierre and Miquelon</option>
-                                    <option value="PR">Puerto Rico</option>
-                                    <option value="PT">Portugal</option>
-                                    <option value="RE">French Reunion</option>
-                                    <option value="RU">Russia</option>
-                                    <option value="SE">Sweden</option>
-                                    <option value="SI">Slovenia</option>
-                                    <option value="SJ">Svalbard & Jan Mayen Islands</option>
-                                    <option value="SK">Slovak Republic</option>
-                                    <option value="SM">San Marino</option>
-                                    <option value="TH">Thailand</option>
-                                    <option value="TR">Turkey</option>
-                                    <option value="US">United States</option>
-                                    <option value="VA">Vatican</option>
-                                    <option value="VI">Virgin Islands</option>
-                                    <option value="YT">Mayotte</option>
-                                    <option value="ZA">South Africa</option>
+                                    <option value="AD" <% if (agency.agency_pays == "AD") { %>selected="selected"<% } %>>Andorra</option>
+                                    <option value="AR" <% if (agency.agency_pays == "AR") { %>selected="selected"<% } %>>Argentina</option>
+                                    <option value="AS" <% if (agency.agency_pays == "AS") { %>selected="selected"<% } %>>American Samoa</option>
+                                    <option value="AD" <% if (agency.agency_pays == "AD") { %>selected="selected"<% } %>>Andorra</option>
+                                    <option value="AR" <% if (agency.agency_pays == "AR") { %>selected="selected"<% } %>>Argentina</option>
+                                    <option value="AS" <% if (agency.agency_pays == "AS") { %>selected="selected"<% } %>>American Samoa</option>
+                                    <option value="AT" <% if (agency.agency_pays == "AT") { %>selected="selected"<% } %>>Austria</option>
+                                    <option value="AU" <% if (agency.agency_pays == "AU") { %>selected="selected"<% } %>>Australia</option>
+                                    <option value="BD" <% if (agency.agency_pays == "BD") { %>selected="selected"<% } %>>Bangladesh</option>
+                                    <option value="BE" <% if (agency.agency_pays == "BE") { %>selected="selected"<% } %>>Belgium</option>
+                                    <option value="BG" <% if (agency.agency_pays == "BG") { %>selected="selected"<% } %>>Bulgaria</option>
+                                    <option value="BR" <% if (agency.agency_pays == "BR") { %>selected="selected"<% } %>>Brazil</option>
+                                    <option value="CA" <% if (agency.agency_pays == "CA") { %>selected="selected"<% } %>>Canada</option>
+                                    <option value="CH" <% if (agency.agency_pays == "CH") { %>selected="selected"<% } %>>Switzerland</option>
+                                    <option value="CZ" <% if (agency.agency_pays == "CZ") { %>selected="selected"<% } %>>Czech Republic</option>
+                                    <option value="DE" <% if (agency.agency_pays == "DE") { %>selected="selected"<% } %>>Germany</option>
+                                    <option value="DK" <% if (agency.agency_pays == "DK") { %>selected="selected"<% } %>>Denmark</option>
+                                    <option value="DO" <% if (agency.agency_pays == "DO") { %>selected="selected"<% } %>>Dominican Republic</option>
+                                    <option value="ES" <% if (agency.agency_pays == "ES") { %>selected="selected"<% } %>>Spain</option>
+                                    <option value="FI" <% if (agency.agency_pays == "FI") { %>selected="selected"<% } %>>Finland</option>
+                                    <option value="FO" <% if (agency.agency_pays == "FO") { %>selected="selected"<% } %>>Faroe Islands</option>
+                                    <option value="FR" <% if (agency.agency_pays == "FR") { %>selected="selected"<% } %>>France</option>
+                                    <option value="GB" <% if (agency.agency_pays == "GB") { %>selected="selected"<% } %>>Great Britain</option>
+                                    <option value="GF" <% if (agency.agency_pays == "GF") { %>selected="selected"<% } %>>French Guyana</option>
+                                    <option value="GG" <% if (agency.agency_pays == "GG") { %>selected="selected"<% } %>>Guernsey</option>
+                                    <option value="GL" <% if (agency.agency_pays == "GL") { %>selected="selected"<% } %>>Greenland</option>
+                                    <option value="GP" <% if (agency.agency_pays == "GP") { %>selected="selected"<% } %>>Guadeloupe</option>
+                                    <option value="GT" <% if (agency.agency_pays == "GT") { %>selected="selected"<% } %>>Guatemala</option>
+                                    <option value="GU" <% if (agency.agency_pays == "GU") { %>selected="selected"<% } %>>Guam</option>
+                                    <option value="GY" <% if (agency.agency_pays == "GY") { %>selected="selected"<% } %>>Guyana</option>
+                                    <option value="HR" <% if (agency.agency_pays == "HR") { %>selected="selected"<% } %>>Croatia</option>
+                                    <option value="HU" <% if (agency.agency_pays == "HU") { %>selected="selected"<% } %>>Hungary</option>
+                                    <option value="IM" <% if (agency.agency_pays == "IM") { %>selected="selected"<% } %>>Isle of Man</option>
+                                    <option value="IN" <% if (agency.agency_pays == "IN") { %>selected="selected"<% } %>>India</option>
+                                    <option value="IS" <% if (agency.agency_pays == "IS") { %>selected="selected"<% } %>>Iceland</option>
+                                    <option value="IT" <% if (agency.agency_pays == "IT") { %>selected="selected"<% } %>>Italy</option>
+                                    <option value="JE" <% if (agency.agency_pays == "JE") { %>selected="selected"<% } %>>Jersey</option>
+                                    <option value="JP" <% if (agency.agency_pays == "JP") { %>selected="selected"<% } %>>Japan</option>
+                                    <option value="LI" <% if (agency.agency_pays == "LI") { %>selected="selected"<% } %>>Liechtenstein</option>
+                                    <option value="LK" <% if (agency.agency_pays == "LK") { %>selected="selected"<% } %>>Sri Lanka</option>
+                                    <option value="LT" <% if (agency.agency_pays == "LT") { %>selected="selected"<% } %>>Lithuania</option>
+                                    <option value="LU" <% if (agency.agency_pays == "LU") { %>selected="selected"<% } %>>Luxembourg</option>
+                                    <option value="MC" <% if (agency.agency_pays == "MC") { %>selected="selected"<% } %>>Monaco</option>
+                                    <option value="MD" <% if (agency.agency_pays == "MD") { %>selected="selected"<% } %>>Moldavia</option>
+                                    <option value="MH" <% if (agency.agency_pays == "MH") { %>selected="selected"<% } %>>Marshall Islands</option>
+                                    <option value="MK" <% if (agency.agency_pays == "MK") { %>selected="selected"<% } %>>Macedonia</option>
+                                    <option value="MP" <% if (agency.agency_pays == "MP") { %>selected="selected"<% } %>>Northern Mariana Islands</option>
+                                    <option value="MQ" <% if (agency.agency_pays == "MQ") { %>selected="selected"<% } %>>Martinique</option>
+                                    <option value="MX" <% if (agency.agency_pays == "MX") { %>selected="selected"<% } %>>Mexico</option>
+                                    <option value="MY" <% if (agency.agency_pays == "MY") { %>selected="selected"<% } %>>Malaysia</option>
+                                    <option value="NL" <% if (agency.agency_pays == "NL") { %>selected="selected"<% } %>>Holland</option>
+                                    <option value="NO" <% if (agency.agency_pays == "NO") { %>selected="selected"<% } %>>Norway</option>
+                                    <option value="NZ" <% if (agency.agency_pays == "NZ") { %>selected="selected"<% } %>>New Zealand</option>
+                                    <option value="PH" <% if (agency.agency_pays == "PH") { %>selected="selected"<% } %>>Phillippines</option>
+                                    <option value="PK" <% if (agency.agency_pays == "PK") { %>selected="selected"<% } %>>Pakistan</option>
+                                    <option value="PL" <% if (agency.agency_pays == "PL") { %>selected="selected"<% } %>>Poland</option>
+                                    <option value="PM" <% if (agency.agency_pays == "PM") { %>selected="selected"<% } %>>Saint Pierre and Miquelon</option>
+                                    <option value="PR" <% if (agency.agency_pays == "PR") { %>selected="selected"<% } %>>Puerto Rico</option>
+                                    <option value="PT" <% if (agency.agency_pays == "PT") { %>selected="selected"<% } %>>Portugal</option>
+                                    <option value="RE" <% if (agency.agency_pays == "RE") { %>selected="selected"<% } %>>French Reunion</option>
+                                    <option value="RU" <% if (agency.agency_pays == "RU") { %>selected="selected"<% } %>>Russia</option>
+                                    <option value="SE" <% if (agency.agency_pays == "SE") { %>selected="selected"<% } %>>Sweden</option>
+                                    <option value="SI" <% if (agency.agency_pays == "SI") { %>selected="selected"<% } %>>Slovenia</option>
+                                    <option value="SJ" <% if (agency.agency_pays == "SJ") { %>selected="selected"<% } %>>Svalbard & Jan Mayen Islands</option>
+                                    <option value="SK" <% if (agency.agency_pays == "SK") { %>selected="selected"<% } %>>Slovak Republic</option>
+                                    <option value="SM" <% if (agency.agency_pays == "SM") { %>selected="selected"<% } %>>San Marino</option>
+                                    <option value="TH" <% if (agency.agency_pays == "TH") { %>selected="selected"<% } %>>Thailand</option>
+                                    <option value="TR" <% if (agency.agency_pays == "TR") { %>selected="selected"<% } %>>Turkey</option>
+                                    <option value="US" <% if (agency.agency_pays == "US") { %>selected="selected"<% } %>>United States</option>
+                                    <option value="VA" <% if (agency.agency_pays == "VA") { %>selected="selected"<% } %>>Vatican</option>
+                                    <option value="VI" <% if (agency.agency_pays == "VI") { %>selected="selected"<% } %>>Virgin Islands</option>
+                                    <option value="YT" <% if (agency.agency_pays == "YT") { %>selected="selected"<% } %>>Mayotte</option>
+                                    <option value="ZA" <% if (agency.agency_pays == "ZA") { %>selected="selected"<% } %>>South Africa</option>
                                 </select>
                             </div>
                         </div>
@@ -125,6 +126,9 @@
                             <label for="inputVille" class="col-sm-3 control-label">Ville :</label>
                             <div class="col-sm-9">
                                 <select id="selectVille" class="form-control" />
+                                <% if (agency.ville != "") { %>
+                                    <option value="<%= agency.ville %>"><%= agency.ville %></option>
+                                <% } %>
                                 </select>
                             </div>
                         </div>
@@ -137,12 +141,25 @@
                         <div class="form-group">
                             <label for="inputTel" class="col-sm-3 control-label">Numéro de téléphone :</label>
                             <div class="col-sm-9">
-                                <input type="tel" class="form-control" value="<%= agency.agency_phone %>" id="inputTel" placeholder="" disabled>
+                                <input type="tel" class="form-control" value="<%= agency.agency_phone %>" id="inputTel" placeholder="">
                             </div>
                         </div>
+                        <div class="form-group">
+                            <label for="inputTel" class="col-sm-3 control-label">Langue :</label>
+                            <div class="col-sm-9">
+                                <input type="tel" class="form-control" value="<%= agency.agency_lang %>" id="inputLangue" placeholder="" disabled>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="inputTel" class="col-sm-3 control-label">Timezone :</label>
+                            <div class="col-sm-9">
+                                <input type="tel" class="form-control" value="<%= agency.agency_lang %>" id="inputTimezone" placeholder="" disabled>
+                            </div>
+                        </div>
+
                     </div>
                 </div>
-                <!-- Informations téchniques -->
+                <!-- Informations techniques -->
                 <div class="panel panel-default">
                     <div class="panel-heading">GTFS</div>
                     <div class="panel-body">
@@ -154,9 +171,7 @@
                         </div>
                         <div class="form-group">
                             <label for="inputUseGTFSRealTime" class="col-sm-3 control-label">Utiliser GTFS-Realtime :</label>
-                            <div class="col-sm-9">
-                                <input type="checkbox" class="form-control" id="inputUseGTFSRealTime">
-                            </div>
+                            <input type="checkbox" class="form-control" id="inputUseGTFSRealTime">
                         </div>
                         <div class="form-group">
                             <label for="inputGTFSRealTimeTripUpdate" class="col-sm-3 control-label">Adresse du fichiers "TripUpdates" : </label>
@@ -178,7 +193,7 @@
                         </div>
                     </div>
                 </div>
-                <button type="submit" id="submitInscription" class="pull-right btn btn-default">Enregistrer les modifications</button>
+                <button type="submit" id="submitUpdate" class="pull-right btn btn-default">Enregistrer les modifications</button>
                 <!-- Zone de retour pour l'utilisateur -->
                 <div id="messageInfo" class="bg-info hidden">
 

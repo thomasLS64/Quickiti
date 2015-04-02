@@ -16,6 +16,7 @@
 	"dependencies": {
 		"express":					"*",
 		"async":					"*",
+		"bcrypt-nodejs":			"*",
 		"socket.io":				"*",
 		"socket.io-client": 		"*",
 		"mongoose":					"*",

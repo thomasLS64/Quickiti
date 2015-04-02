@@ -1,3 +1,6 @@
+//On place le repertoire de travail dans le repertoire où se situe le fichier
+process.chdir(__dirname);
+//On définie toutes les dépendances, et on lance l'écoute du serveur de récupération de donnée sur le port 9009
 var async =     require('async'), 				//pouvoir faire s'enchainer des fonctions en asynchrone
 port = 9009, 									//Port d'écoute du serveur de récupération de données
 io =            require('socket.io')(port),		// Socket.IO pour la communication entre serveurs
@@ -12,7 +15,7 @@ request = 		require('request'), 			//récuperer des fichiers sur un serveur web
 unzip = 		require('unzip'), 				//dézipper les fichiers zip qu'on récupère
 csv = 			require('csv'), 				//traiter les fichiers GTFS
 GtfsRealtimeBindings = require('gtfs-realtime-bindings'), // GTFS RealTime
-downloadDir = '../Test/GTFSDatas';				//Nom du dossier de téléchargment des fichiers GTFS
+downloadDir = '../Data/GTFSDatas';				//Nom du dossier de téléchargment des fichiers GTFS
 try {
 	fs.mkdirSync(downloadDir);
 }
@@ -118,7 +121,7 @@ io.on('connection', function (socket) {
 					}
 					else {
 						//Téléchargement et traitements des fichiers GTFS si ils existent
-						downloadAndParseGTFS(agency.agency_name, agency.urlGTFSFile, function (message, typeMessage) {
+						downloadAndParseGTFS(agency._id, agency.urlGTFSFile, function (message, typeMessage) {
 							socket.emit("userCallback", message, typeMessage);
 						}, traitementGTFSTermine);
 					}
@@ -126,13 +129,18 @@ io.on('connection', function (socket) {
 				function (GTFS, updateBDAgencyTermine) {
 					console.log("Mise à jour de l'agence...");
 					socket.emit("userCallback", "Mise à jour de l'agence...", 'info');
-					var agency = GTFS.compagnie[0];
+					var agency = GTFS.compagnie[0]
+
 					clientGestBD.emit('updateAgency', {
 						_id: agencyId
 					},  {
 						agency_id: agency.agency_id,
 						agency_timezone: agency.agency_timezone,
-						agency_lang: agency.agency_lang
+						agency_name: agency.agency_name,
+						agency_url: agency.agency_url,
+						agency_phone: agency.agency_phone,
+						agency_lang: agency.agency_lang,
+						agency_fare_url: agency.agency_fare_url
 					}, function (isSuccess) {
 						if (isSuccess) {
 							updateBDAgencyTermine(null, GTFS);
@@ -181,16 +189,18 @@ io.on('connection', function (socket) {
 										console.log(traitementArretOk);
 										if (result.length == 0) { //Si l'arrêt n'existe pas
 											//On le créer
-											clientGestBD.emit('createStop', newStop, function (err) {
+											clientGestBD.emit('createStop', newStop, function (isSuccess) {
 												console.log("Arrêt " + newStop.stop_id + " créer.");
-												traitementArretOk(err);
+												if (isSuccess) { traitementArretOk(); }
+												else { traitementArretOk("Erreur lors du traitement de l'arret " + stop.stop_id); }
 											});
 										}
 										else {
 
-											clientGestBD.emit('updateStop', { _id: result[0]._id }, newStop, function (err) {
-												console.log("Arrêt " + newStop.stop_id + " mis à jour." + err);
-												traitementArretOk(err);
+											clientGestBD.emit('updateStop', { _id: result[0]._id }, newStop, function (isSuccess) {
+												console.log("Arrêt " + newStop.stop_id + " mis à jour.");
+												if (isSuccess) { traitementArretOk(); }
+												else { traitementArretOk("Erreur lors du traitement de l'arret " + stop.stop_id); }
 											});
 										}
 									}
@@ -210,7 +220,7 @@ io.on('connection', function (socket) {
 					console.log("Mise à jour des lignes...");
 					socket.emit("userCallback", "Mise à jour des lignes...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
-					//En limitant à 3 en même temps pour ne pas flooder la bdd
+					//En limitant à 1 en même temps pour ne pas flooder la bdd
 					async.eachLimit(GTFS.ligne, 1,
 						function (ligne, ligneTermine) {
 							console.log("Insertion de " + ligne.route_id);
@@ -238,15 +248,17 @@ io.on('connection', function (socket) {
 										newLine.compagnieId = agencyId;
 										if (result.length == 0) { //Si l'arrêt n'existe pas
 											//On le créer
-											clientGestBD.emit('createLine', newLine, function (err) {
+											clientGestBD.emit('createLine', newLine, function (isSuccess) {
 												console.log("Ligne " + newLine.route_id + " créer.");
-												traitementLigneOk(err);
+												if (isSuccess) { traitementLigneOk(); }
+												else { traitementLigneOk("Erreur lors du traitement de la ligne " + route.route_id); }
 											});
 										}
 										else {
-											clientGestBD.emit('updateLine', { _id: result[0]._id }, newLine, function (err) {
+											clientGestBD.emit('updateLine', { _id: result[0]._id }, newLine, function (isSuccess) {
 												console.log("Ligne " + newLine.route_id + " mis à jour.");
-												traitementLigneOk(err);
+												if (isSuccess) { traitementLigneOk(); }
+												else { traitementLigneOk("Erreur lors du traitement de la ligne " + route.route_id); }
 											});
 										}
 									}
@@ -266,7 +278,7 @@ io.on('connection', function (socket) {
 					console.log("Mise à jour des trajets...");
 					socket.emit("userCallback", "Mise à jour des trajets...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
-					//En limitant à 3 en même temps pour ne pas flooder la bdd
+					//En limitant à 1 en même temps pour ne pas flooder la bdd
 					async.eachLimit(GTFS.trajet, 1,
 						function (trajet, trajetTermine) {
 							console.log("Insertion de " + trajet.trip_id);
@@ -292,15 +304,17 @@ io.on('connection', function (socket) {
 										newTrip.compagnieId = agencyId;
 										if (result.length == 0) { //Si l'arrêt n'existe pas
 											//On le créer
-											clientGestBD.emit('createLine', newTrip, function (err) {
-												console.log("Trajet " + newTrip.trip_id + " créer." + err);
-												traitementTrajetOk(err);
+											clientGestBD.emit('createLine', newTrip, function (isSuccess) {
+												console.log("Trajet " + newTrip.trip_id + " créer.");
+												if (isSuccess) { traitementTrajetOk(); }
+												else { traitementTrajetOk("Erreur lors du traitement de la ligne " + trip.trip_id); }
 											});
 										}
 										else {
-											clientGestBD.emit('updateLine', { _id: result[0]._id }, newTrip, function (err) {
+											clientGestBD.emit('updateLine', { _id: result[0]._id }, newTrip, function (isSuccess) {
 												console.log("Trajet " + newTrip.trip_id + " mis à jour.");
-												traitementTrajetOk(err);
+												if (isSuccess) { traitementTrajetOk(); }
+												else { traitementTrajetOk("Erreur lors du traitement de la ligne " + trip.trip_id); }
 											});
 										}
 									}
@@ -320,7 +334,7 @@ io.on('connection', function (socket) {
 					console.log("Mise à jour des correspondances arrêts / ligne...");
 					socket.emit("userCallback", "Mise à jour des correspondances arrêts / ligne...", 'info');
 					//On applique la fonction (3eme paramètre) sur chaque item du tableau (1er paramètre)
-					//En limitant à 5 en même temps pour ne pas flooder la bdd
+					//En limitant à 1 en même temps pour ne pas flooder la bdd
 					async.eachLimit(GTFS.arretLigne, 1,
 						function (arretLigne, arretLigneTermine) {
 							console.log("Insertion de la correspondance " + arretLigne.trip_id + "/" + arretLigne.stop_id);
@@ -366,13 +380,15 @@ io.on('connection', function (socket) {
 											//On le créer
 											clientGestBD.emit('createStopLine', newArretLigne, function (err) {
 												console.log("Correspondance " + newArretLigne.arretId + "/" + newArretLigne.ligneId + " créer.");
-												traitementArretLigneOk(err);
+												if (err) { traitementArretLigneOk(); }
+												else { traitementArretLigneOk("Erreur lors du traitement de la correspondance " + arretLigne.trip_id + " / " + arretLigne.stop_id); }
 											});
 										}
 										else {
 											clientGestBD.emit('updateLine', { _id: result[0]._id }, newArretLigne, function (err) {
 												console.log("Correspondance " + newArretLigne.arretId + "/" + newArretLigne.ligneId + " mise à jour.");
-												traitementArretLigneOk(err);
+												if (err) { traitementArretLigneOk(); }
+												else { traitementArretLigneOk("Erreur lors du traitement de la correspondance " + arretLigne.trip_id + " / " + arretLigne.stop_id); }
 											});
 										}
 									}
@@ -395,11 +411,12 @@ io.on('connection', function (socket) {
 		function (err, results) {
 			if (!err) {
 				socket.emit("userCallback", "Mise à jour terminé.", 'success');
-				callback(true);
+				callback(null);
 			}
 			else {
 				socket.emit("userCallback", "Erreur : " + err, 'danger');
-				callback({ error: err });
+				if (typeof err == "Object") err = JSON.stringify(err);
+				callback(err);
 			}
 		});
 	});
@@ -411,7 +428,6 @@ io.on('connection', function (socket) {
 	socket.on('searchRoutesRealTime', function (stops, callback) {
 		//Vérification de l'existance de données en temps réel 
 		console.log("Requête d'itinéraire en temps réel.");
-		callback("test");
 	});
 });
 

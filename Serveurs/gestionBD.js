@@ -1,7 +1,7 @@
 var port = 7007, // Port d'écoute des sockets
 	io = require('socket.io')(port), // Socket.IO pour la communication entre serveurs
 	mongoose = require('mongoose'), // ODM pour MongoDB
-	async = require('async'),
+	bcrypt = require('bcrypt-nodejs'),
 	Schema = mongoose.Schema;
 
 /*
@@ -33,7 +33,8 @@ var compagnieSchema = new mongoose.Schema({
 	urlGTFSTripUpdate : String,
 	urlGTFSAlert : String,
 	urlGTFSVehiclePosition : String
-}).plugin(require('mongoose-bcrypt'));
+});
+compagnieSchema.plugin(require('mongoose-bcrypt'));
 
 //	Schéma d'une ligne
 var ligneSchema = new mongoose.Schema({
@@ -124,6 +125,9 @@ function createAgency(d, callback) {
 }
 // Compagnie de transport - Mise à jour
 function updateAgency(query, update, callback) {
+	if (typeof(update.password) != "undefined") {
+		update.password = bcrypt.hashSync(update.password, bcrypt.genSaltSync(0), null);
+	}
 	compagnieModel.findOneAndUpdate(query, update, function(err, d) {
 		if(err) {
 			console.log('[ERREUR] Compagnie de transport - UPDATE');
@@ -573,6 +577,48 @@ io.on('connection', function(socket) {
 		});
 	});
 
+	/*
+	 **	Compagnie de transport - unsubscribe
+	 **		return [Boolean]
+	 **
+	 **	[Boolean] -> true  (Compagnie désinscrite)
+	 **	[Boolean] -> false (Compagnie non désinscrite)
+	 */
+	socket.on('unsubscribeAgency', function (agencyId, callback) {
+		compagnieModel.remove({ _id: agencyId }, function (err) {
+			if (!err) {
+				ligneModel.remove({ compagnieId: agencyId }, function (err) {
+					if (!err) {
+						arretModel.remove({compagnieId: agencyId}, function (err) {
+							if (!err) {
+								arretLigneModel.remove({compagnieId: agencyId}, function (err) {
+									if (!err) {
+										vehiculeModel.remove({compagnieId: agencyId}, function (err) {
+											if (!err) {
+												callback();
+												console.log('[REUSSI] Compagnie - DELETE');
+											}
+											else {
+												callback(err);
+												console.log('[ERREUR] Compagnie - DELETE');
+											}
+										});
+									}
+									else { callback(err); console.log('[ERREUR] Compagnie - DELETE'); }
+								});
+							}
+							else { callback(err); console.log('[ERREUR] Compagnie - DELETE'); }
+						});
+					}
+					else { callback(err); console.log('[ERREUR] Compagnie - DELETE'); }
+				});
+			}
+			else {
+				callback(err);
+				console.log('[ERREUR] Compagnie - DELETE');
+			}
+		});
+	});
 
 	/*
 	**	LIGNE

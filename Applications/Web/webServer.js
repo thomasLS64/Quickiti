@@ -1,3 +1,6 @@
+//On place le repertoire de travail dans le repertoire où se situe le fichier
+process.chdir(__dirname);
+//On définie toutes les dépendances, et on lance l'écoute du serveur web
 var express = require('express'),
 	clientSockIo = require('socket.io-client'),
 	app = express(),
@@ -10,11 +13,12 @@ var express = require('express'),
 	bodyParser = require('body-parser'),
 	validator = require('validator'),
 	async = require('async'),
+	jetonsConnexionAuto = {},
 	port = 8080;
-
 /*
  Client vers le serveur central
 */
+
 clientServeurCentral = clientSockIo('http://localhost:8008/', {
 	reconnection : 			true,  //Reconnexion automatique
 	reconnectionDelay : 	2000,  //Reconnexion toutes les 2 secondes
@@ -25,7 +29,7 @@ clientServeurCentral = clientSockIo('http://localhost:8008/', {
  Evenement déclanché quand on est connecté au serveur central
  */
 clientServeurCentral.on('connect', function(){
-	console.info("[Serveur Central] cConnecté au serveur central.".green);
+	console.info("[Serveur Central]" + " Connecté au serveur central.".green);
 	clientServeurCentral.connecte = true; //Variable qui indique l'état de la connexion au serveur
 });
 
@@ -82,7 +86,7 @@ clientServeurGestBD.on('connect', function(){
  Evenement déclanché quand on est déconnecté du serveur de gestion de bd
  */
 clientServeurGestBD.on('disconnect', function(){
-	console.error("[Serveur BD] ".magenta + "Déconnecté du serveur central.".red);
+	console.error("[Serveur BD] ".magenta + "Déconnecté du serveur de gestion de base de donnée.".red);
 	clientServeurGestBD.connecte = false;
 });
 
@@ -112,19 +116,42 @@ clientServeurGestBD.on('retourUtilisateur', function (mess, type, sockID) {
 
 
 server.listen(port, function() {
-	console.log('[Serveur Web]'.cyan + ' Le serveur web écoute sur le port %d', port);
+	console.log('[Serveur Web]'.cyan + ' Le serveur web écoute sur le port %d'.green, port);
 });
 app.use(cookieParser());
 app.use(session({secret: 'QUICKITI987',  saveUninitialized: true}));
-app.use(bodyParser());
+app.use(bodyParser.urlencoded({
+	extended: true
+}));
 //Middleware
 function requireLogin (req, res, next) {
 	if (req.session.agency) {
-		// User is authenticated, let him in
-		next();
+		clientServeurGestBD.emit('selectAgencies', { _id: req.session.agency._id }, function (err, agencys) {
+			if (!err) {
+				req.session.agency = agencys[0];
+				next();
+			}
+			else {
+				res.send('Erreur : La récupération de l\'agence a échouée.');
+			}
+		});
 	} else {
-		// Otherwise, we redirect him to login form
-		res.redirect("/connexion");
+		if (jetonsConnexionAuto[req.query.jeton]) {
+			clientServeurGestBD.emit('selectAgencies', { _id: jetonsConnexionAuto[req.query.jeton]._id }, function (err, agencys) {
+				if (!err) {
+					req.session.agency = agencys[0];
+					next();
+				}
+				else {
+					res.send('Erreur : La récupération de l\'inscription n\'a pas pu être retrouvée.');
+				}
+				delete jetonsConnexionAuto[req.query.jeton];
+			});
+		}
+		else {
+			// Sinon on redirige vers le formulaire de login
+			res.redirect("/connexion");
+		}
 	}
 }
 function requireNotLogged (req, res, next) {
@@ -138,6 +165,7 @@ function requireNotLogged (req, res, next) {
 	}
 }
 // Dossier contenant l'application web
+
 app.use(express.static(__dirname + '/public'))
 	.get('/inscription',[requireNotLogged], function (req, res) {
 		res.render('pages/inscription.ejs', { pageTitle: "Inscription", pageHeader: "Inscription à Quickiti", tabAct: "insc", agency: null });
@@ -145,7 +173,7 @@ app.use(express.static(__dirname + '/public'))
 	.get('/connexion', [requireNotLogged], function (req, res) {
 		res.render('pages/connexion.ejs', { pageTitle: "Connexion", pageHeader: "Connexion à Quickiti", tabAct: "conn", agency: null });
 	})
-	.post('/connexion', function (req, res) {
+	.post('/connexion', [requireNotLogged], function (req, res) {
 		if (req.body.emailConnexion != null && req.body.passConnexion != null) {
 			clientServeurGestBD.emit("loginAgency",
 				req.body.emailConnexion,
@@ -224,13 +252,25 @@ app.use(express.static(__dirname + '/public'))
 				pageTitle: "Espace membre - Modifier ses informations",
 				pageHeader: "Modifier ses informations",
 				tabAct: "espmbr",
-				agency: req.session.agency,
+				agency: req.session.agency
 			}
 		);
 	})
 	.get('/deconnexion', [requireLogin], function(req, res) {
 		req.session = null;
 		res.redirect('/connexion');
+	})
+	.get('/desinscription', [requireLogin], function(req, res) {
+		clientServeurGestBD.emit('unsubscribeAgency', req.session.agency._id, function (err) {
+			if (!err) {
+				req.session = null;
+				res.redirect('/inscription');
+			}
+			else {
+				res.send('Erreur : La désinscription de l\'agence a échouée.');
+			}
+		});
+
 	})
 ;
 // Serveur de socket de l'application web
@@ -242,27 +282,11 @@ io.on('connection', function(socket) {
 		clientServeurCentral.emit('clientRequest', requestType, request, callback);
 		console.log("[Serveur BD]".magenta + "< Envoi d'une requête de type " + requestType + " ...");
 	});
+
 	socket.on('subscribeAgency', function (form, callback) {
 		console.log("Inscription d'une compagnie...");
 		socket.emit("userCallback", "Validation du formulaire en cours...", "info");
 		var formErrors = [];
-		if (typeof form.infoGenerales != "undefined") {
-			/*
-			 Validation de l'email de contact
-			 */
-			if (typeof form.infoGenerales.email == "undefined" || !validator.isEmail(form.infoGenerales.email)) {
-				formErrors.push("L'email de contact n'est pas définie, ou est incorrect.");
-			}
-			/*
-			 Validation du mot de passe
-			 */
-			if (typeof form.infoGenerales.motDePasse == "undefined") {
-				formErrors.push("Le mot de passe n'est pas définie, ou est incorrect.");
-			}
-		}
-		else {
-			formErrors.push("Les informations générales ne sont pas définies");
-		}
 		if (typeof form.gtfs != "undefined") {
 			if (typeof form.gtfs.zipGTFS == "undefined" || !validator.isURL(form.gtfs.zipGTFS)) {
 				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
@@ -294,17 +318,37 @@ io.on('connection', function(socket) {
 			callback();
 		}
 		else {
-			clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback)
-				.on('userCallback', function (message, typeMessage) {
-						socket.emit('userCallback', message, typeMessage);
-					}
-				)
-					.on('error', function (e) {
-						console.log("Erreur");
-						socket.emit('userCallback', "Le serveur de récupération de donnée n'est pas disponible, merci de réessayer plus tard.", "error");
-					}
-				)
-			;
+			socket.emit("userCallback", "Formulaire validé, enregistrement de l'entreprise...", "info");
+			var formValide = {
+				gtfs: {
+					zipGTFS: form.gtfs.zipGTFS,
+					BoolUseRealTime: form.gtfs.BoolUseRealTime,
+					addrGTFSTripUpdate: form.gtfs.addrGTFSTripUpdate,
+					addrGTFSAlert: form.gtfs.addrGTFSAlert,
+					addrGTFSVehiclePosition: form.gtfs.addrGTFSVehiclePosition
+				}
+			}
+			clientServeurGestBD.emit('createAgency', formValide, function (isSuccess, agency) {
+				if (isSuccess) {
+					console.log("Inscription en base de donnée réussie.");
+					socket.emit('userCallback', "Inscription en base de donnée réussie, accès à vos données GTFS...", "info");
+					updateGTFSRecupDonnee(socket, agency._id,
+						function (err) {
+							if (!err) {
+								jetonsConnexionAuto[socket.id] = agency;
+								callback(null, socket.id);
+							}
+							else {
+								callback(err);
+							}
+						}
+					);
+				}
+				else {
+					callback();
+					socket.emit('userCallback', "Inscription en base de donnée échouée.", "danger");
+				}
+			});
 		}
 	});
 	socket.on('updateAgency', function (form, callback) {
@@ -314,11 +358,27 @@ io.on('connection', function(socket) {
 		//sera utilisé pour les afficher à l'utilisateur
 		var formErrors = [];
 
+		//Vérification des informations générales
 		if (typeof form.infoGenerales != "undefined") {
+			if (typeof form.infoGenerales.inputIdAgency == "undefined") {
+				formErrors.push("L'id de l'agence est indéfinie.");
+			}
+			/*
+				Validation de l'email de contact
+			*/
+			if (typeof form.infoGenerales.email == "undefined" || !validator.isEmail(form.infoGenerales.email)) {
+				formErrors.push("L'email de contact n'est pas définie, ou est incorrect.");
+			}
+			/*
+			 	Validation du mot de passe
+			*/
+			if (typeof form.infoGenerales.motDePasse == "undefined") {
+				formErrors.push("Le mot de passe n'est pas définie, ou est incorrect.");
+			}
 
 			/*
-			 	Validation de l'adresse
-			*/
+			 Validation de l'adresse
+			 */
 			if (typeof form.infoGenerales.adresse != "undefined") {
 
 				if (!validator.isLength(form.infoGenerales.adresse, 3, 60)) {
@@ -338,29 +398,12 @@ io.on('connection', function(socket) {
 			}
 
 			/*
-				Validation de l'email de contact
-			*/
-			if (typeof form.infoGenerales.email == "undefined" || !validator.isEmail(form.infoGenerales.email)) {
-				formErrors.push("L'email de contact n'est pas définie, ou est incorrect.");
-			}
-			/*
-			 	Validation du mot de passe
-			*/
-			if (typeof form.infoGenerales.motDePasse == "undefined") {
-				formErrors.push("Le mot de passe n'est pas définie, ou est incorrect.");
-			}
-			/*
 			 	Validation du pays
 			*/
 			if (typeof form.infoGenerales.pays == "undefined" || form.infoGenerales.pays.length != 2 || !validator.isAlpha(form.infoGenerales.pays)) {
 				formErrors.push("Le pays n'est pas définie, ou est incorrect.");
 			}
-			/*
-			 	Validation du code postal
-			*/
-			if (typeof form.infoGenerales.codePostal == "undefined" || form.infoGenerales.codePostal.length > 6) {
-				formErrors.push("Le code postal n'est pas définie, ou est incorrect.");
-			}
+
 			/*
 			 	Validation de la ville
 			*/
@@ -375,12 +418,7 @@ io.on('connection', function(socket) {
 			else {
 				formErrors.push("La ville n'est pas définie, ou est incorrect.");
 			}
-			/*
-			 Validation du site web
-			 */
-			if (typeof form.infoGenerales.urlSiteWeb == "undefined" || !validator.isURL(form.infoGenerales.urlSiteWeb)) {
-				formErrors.push("L'url du site web n'est pas définie, ou est incorrect.");
-			}
+
 			/*
 			 Validation du téléphone
 			 */
@@ -391,6 +429,8 @@ io.on('connection', function(socket) {
 		else {
 			formErrors.push("Les informations générales ne sont pas définies.");
 		}
+
+		//Vérification des informations techniques (GTFS)
 		if (typeof form.gtfs != "undefined") {
 			if (typeof form.gtfs.zipGTFS == "undefined" || !validator.isURL(form.gtfs.zipGTFS)) {
 				formErrors.push("L'adresse du fichier GTFS est incorrect ou non définie.");
@@ -416,10 +456,53 @@ io.on('connection', function(socket) {
 		else {
 			formErrors.push("Les informations GTFS ne sont pas définies.");
 		}
+
+		//On vérifie si on a trouvé des erreurs dans le formulaire
 		if (formErrors.length == 0) {
-			socket.emit("userCallback", "Formulaire valide, enregistrement en base de donnée...", 'info');
-			clientServeurGestBD.emit('createAgency', form, callback);
+
+			async.waterfall([
+				function (recuperationAgenceTermine) {
+					clientServeurGestBD.emit('selectAgencies', { _id: form.infoGenerales.inputIdAgency }, recuperationAgenceTermine);
+				},
+				function (compagnies, enregistrementTermine) {
+					//On prend ce qu'on a besoin, et pas l'objet qui nous est envoyé tel quel
+					if (typeof compagnies[0].password == "undefined" && form.infoGenerales.motDePasse == "") {
+						socket.emit("userCallback", "Mot de passe nécessaire.", 'danger');
+						callback();
+					}
+					else {
+						socket.emit("userCallback", "Formulaire valide, enregistrement en base de donnée...", 'info');
+						var formUpdate = {
+							email: form.infoGenerales.email,
+							ville: form.infoGenerales.ville,
+							agency_pays: form.infoGenerales.pays,
+							adresse: form.infoGenerales.adresse,
+							agency_phone: form.infoGenerales.telephone,
+							zipGTFS: form.gtfs.zipGTFS,
+							BoolUseRealTime: form.gtfs.BoolUseRealTime,
+							addrGTFSTripUpdate: form.gtfs.addrGTFSTripUpdate,
+							addrGTFSAlert: form.gtfs.addrGTFSAlert,
+							addrGTFSVehiclePosition: form.gtfs.addrGTFSVehiclePosition
+						};
+						if (form.infoGenerales.motDePasse != "") {
+							formUpdate.password = form.infoGenerales.motDePasse;
+						}
+						clientServeurGestBD.emit('updateAgency', { _id: compagnies[0]._id }, formUpdate, function (isSuccess) {
+							if (isSuccess) {
+								socket.emit("userCallback", "Formulaire enregistré.", 'success');
+							}
+							else {
+								socket.emit("userCallback", "Erreur lors de l'enregistrement du formulaire.", 'error');
+							}
+							callback();
+							enregistrementTermine();
+						});
+					}
+				}
+			]);
+
 		}
+
 		else {
 			socket.emit("userCallback", formErrors, "danger");
 			console.log("Formulaire invalide.");
@@ -435,15 +518,18 @@ io.on('connection', function(socket) {
 	});
 	socket.on("updateGTFS", function (idAgency, callback) {
 		socket.emit('userCallback', "Connexion au serveur de récupération de donnée et requête...", "info");
-		clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback)
-			.on('userCallback', function (message, typeMessage) {
-					socket.emit('userCallback', message, typeMessage);
-				}
-			)
-			.on('error', function (e) {
-					console.log("Erreur");
-					socket.emit('userCallback', "Le serveur de récupération de donnée n'est pas disponible, merci de réessayer plus tard.", "error");
-				}
-			);
+		updateGTFSRecupDonnee(socket, idAgency, callback);
 	});
 });
+function updateGTFSRecupDonnee(socket, idAgency, callback) {
+	clientSockIo('http://localhost:9009/').emit('updateGTFS', idAgency, callback)
+		.on('userCallback', function (message, typeMessage) {
+			socket.emit('userCallback', message, typeMessage);
+		}
+	)
+		.on('error', function (e) {
+			console.log("Erreur");
+			socket.emit('userCallback', "Le serveur de récupération de donnée n'est pas disponible, merci de réessayer plus tard.", "error");
+		}
+	);
+}

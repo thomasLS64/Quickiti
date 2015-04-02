@@ -27,28 +27,70 @@ socketWebServer = io("http://127.0.0.1:8080")
             console.log(message);
            affMessage(message, typeMessage);
        });
-//Evenement qui se déclanche quand la page est chargée
+function sendForm(FormDOM, objForm, idSubmitButton, commande, callback) {
+    affMessage("Envoi du formulaire...");
+    //On désactive le bouton d'inscription pendant le traitement du formulaire
+    FormDOM.elements.namedItem(idSubmitButton).disabled = true;
+
+    //On envoi l'objet au serveur web
+    socketWebServer.emit(commande, objForm, function (err, jeton) {
+        FormDOM.elements.namedItem(idSubmitButton).disabled = false;
+        if (callback) callback(err, jeton);
+    });
+}
+//Évenement qui se déclenche quand la page est chargée
 document.addEventListener("DOMContentLoaded", function () {
+    if (document.getElementById('formInscription')) {
+        document.getElementById('formInscription').addEventListener('submit',
+            function (event) {
+                //On arrête la propagation de l'evenement de l'envoi du formulaire et on empèche le navigateur d'agir
+                event.preventDefault();
+                affMessage("Envoi du formulaire...");
+                var elementsForm = this.elements;
+                var objForm = {
+                    gtfs: {
+                        zipGTFS: elementsForm.inputGTFSZipFile.value,
+                        BoolUseRealTime: elementsForm.inputUseGTFSRealTime.checked,
+                        addrGTFSTripUpdate: elementsForm.inputGTFSRealTimeTripUpdate.value,
+                        addrGTFSAlert: elementsForm.inputGTFSRealTimeAlert.value,
+                        addrGTFSVehiclePosition: elementsForm.inputGTFSRealVehiclePosition.value
+                    }
+                };
+                sendForm(this, objForm, "submitInscription", "subscribeAgency", function (err, jetonConnexion) {
+                    console.log("err", err);
+                    console.log("jeton", jetonConnexion);
+                    if (!err) {
+                        console.log("jeton", jetonConnexion);
+                        affMessage("Vos informations ont bien été traité... Redirection vers l'étape deux de votre inscription", "success");
+                        setTimeout(function () {
+                            window.location = '/modifier?jeton=' + jetonConnexion;
+                        }, 2000);
+                    }
+                    //Sinon les erreurs seront affiché par la fonction userCallback
+                });
+            }
+        );
+    }
     if (document.getElementById("formModifs")) {
         //Evenement qui se déclanche quand on valide le formulaire
         document.getElementById("formModifs").addEventListener("submit", function (event) {
+
             //On arrête la propagation de l'evenement de l'envoi du formulaire et on empèche le navigateur d'agir
             event.preventDefault();
+
             //On informe l'utilisateur qu'on envoi le formulaire
             affMessage("Envoi du formulaire...");
 
             //On créer un objet qui contient toutes les informations du formulaire
-            elementsForm = this.elements;
+            var elementsForm = this.elements;
             var objForm = {
                 infoGenerales: {
-                    raisSocial: elementsForm.inputRS.value,
+                    inputIdAgency: elementsForm.inputIdAgency.value,
                     email: elementsForm.inputEmail.value,
                     motDePasse: elementsForm.inputPass.value,
                     ville: elementsForm.selectVille.value,
                     pays: elementsForm.selectPays.value,
                     adresse: elementsForm.inputAddr.value,
-                    codePostal: elementsForm.inputCP.value,
-                    urlSiteWeb: elementsForm.inputSite.value,
                     telephone: elementsForm.inputTel.value
                 },
                 gtfs: {
@@ -59,19 +101,8 @@ document.addEventListener("DOMContentLoaded", function () {
                     addrGTFSVehiclePosition: elementsForm.inputGTFSRealVehiclePosition.value
                 }
             };
-            console.log(objForm);
-            //On envoi l'objet au serveur web
-            elementsForm.namedItem("submitInscription").disabled = true;
-            socketWebServer.emit("inscription", objForm, function (isSuccess) {
-                elementsForm.namedItem("submitInscription").disabled = false;
-                console.log(isSuccess);
-                if (isSuccess) {
-                    affMessage("Vous avez bien été enregistré, rendez vous dans l'onglet connexion pour vous connecter.", "success");
-                }
-                else {
 
-                }
-            });
+            sendForm(this, objForm, "submitUpdate", "updateAgency");
         });
     }
     if (document.getElementById("inputCP")) {
@@ -105,9 +136,9 @@ document.addEventListener("DOMContentLoaded", function () {
             this.innerHTML = "Mise à jour en cours...";
             this.disabled = true;
             var that = this;
-            socketWebServer.emit('updateGTFS', this.dataset.idagency, function (isSuccess) {
+            socketWebServer.emit('updateGTFS', this.dataset.idagency, function (err) {
                 console.log("Mise à jour OK");
-                if (isSuccess) {
+                if (!err) {
                     that.innerHTML = "Mise à jour terminée.";
                 }
                 else {
