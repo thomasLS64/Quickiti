@@ -458,6 +458,7 @@ io.on('connection', function(socket) {
 		}
 
 		//On vérifie si on a trouvé des erreurs dans le formulaire
+		//Si on en trouve pas, on cherche l'agence qui correspond à celle qu'on doit validé si on la trouve , on met à jour la base de donnée.
 		if (formErrors.length == 0) {
 
 			async.waterfall([
@@ -484,9 +485,11 @@ io.on('connection', function(socket) {
 							addrGTFSAlert: form.gtfs.addrGTFSAlert,
 							addrGTFSVehiclePosition: form.gtfs.addrGTFSVehiclePosition
 						};
+						//Si le mot de passe est précisé, on le rajoute, sinon on le change pas
 						if (form.infoGenerales.motDePasse != "") {
 							formUpdate.password = form.infoGenerales.motDePasse;
 						}
+						//On met à jour
 						clientServeurGestBD.emit('updateAgency', { _id: compagnies[0]._id }, formUpdate, function (isSuccess) {
 							if (isSuccess) {
 								socket.emit("userCallback", "Formulaire enregistré.", 'success');
@@ -502,13 +505,14 @@ io.on('connection', function(socket) {
 			]);
 
 		}
-
+		//Sinon on renvoi une erreur
 		else {
 			socket.emit("userCallback", formErrors, "danger");
 			console.log("Formulaire invalide.");
 			callback();
 		}
 	});
+	//Fonction qui fait appel à une API externe pour trouver une ville en fonction d'un pays
 	socket.on('chercheCPVille', function (codePostal, pays, callback) {
 		request('http://api.zippopotam.us/' + pays.toLowerCase() + '/' + codePostal, function (error, response, body) {
 			if (!error) {

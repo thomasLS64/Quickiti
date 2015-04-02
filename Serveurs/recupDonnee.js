@@ -430,17 +430,6 @@ io.on('connection', function (socket) {
 		console.log("Requête d'itinéraire en temps réel.");
 	});
 });
-
-function clearDirectory(directory, cb) {
-	//On efface le dossier de stockage des fichiers GTFS s'il existe
-
-	exec((process.platform.match(/^win/) ? 'rmdir /Q /S ' : 'rm -rf ') + directory, 
-		function(e, stdout, stderr) {
-			if (e) cb(e);
-			else cb();
-		}
-	);
-}
 function downloadFile(fileUrl, destinationFile, cb) {
 	//On parse l'URL et on vérifie que le protocole est bien http ou https, sinon on essaye de récuperer le fichier
 	//sur le système local afin de pouvoir réaliser des tests sans connexion
@@ -481,7 +470,6 @@ function parseGTFS(directory, userCallback, callback) {
 				fileName: 'agency.txt', 	//Nom du fichier
 				required: true,				//Est-il obligatoire ?
 				internalName: "compagnie", 	//Nom interne
-				// internalId: "agency_id",	//Attribut qui servira d'identifiant, pour l'objet qui sera renvoyé
 				attributes: {				//Liste des attributs à récupérer dans ce fichier
 					agency_id: 			{ required: true },
 					agency_name: 		{ required: true },
@@ -496,7 +484,6 @@ function parseGTFS(directory, userCallback, callback) {
 				fileName: 'stops.txt',
 				required: true,
 				internalName: "arret",
-				// internalId: "stop_id",
 				attributes: {
 					stop_id: 			{ required: true },
 					stop_code: 			{ required: false },
@@ -511,7 +498,6 @@ function parseGTFS(directory, userCallback, callback) {
 				fileName: 'routes.txt',
 				required: true,
 				internalName: "ligne",
-				// internalId: "route_id",
 				attributes: {
 					route_id: 			{ required: true },
 					route_short_name: 	{ required: true },
@@ -524,7 +510,6 @@ function parseGTFS(directory, userCallback, callback) {
 				fileName: 'trips.txt',
 				required: true,
 				internalName: "trajet",
-				// internalId: "route_id",
 				attributes: {
 					route_id: 				{ required: true },
 					service_id: 			{ required: true },
@@ -588,17 +573,6 @@ function parseGTFS(directory, userCallback, callback) {
 									delete line[key];
 								}
 							}
-							/* On vérifie si l'attribut qui sert d'ID est présent, sinon on lève une erreur
-							if (!_.has(file.attributes, file.internalId)) {
-								return fileHasBeenProcessed(new Error("L'attribut d'identification " + file.internalId + " n'a pas été trouvé dans le fichier " + file.fileName));
-							}
-
-							else { //Sinon on créer dans la réponse l'objet qui recevra les informations de la ligne qu'on est entrain de lire si l'objet n'existe pas déjà
-								var id = line[file.internalId];
-								if (!_.has(toReturn[file.internalName], id)) {
-									toReturn[file.internalName][id] = {};
-								}
-							}*/
 							var aRemplir = {};
 							//Pour chaques attributs à récuperer dans le fichier
 							for (var attribute in file.attributes) {
@@ -682,11 +656,6 @@ function downloadAndParseGTFS(name, urlGTFS, userCallback, callback) {
 				console.log("Traitement des fichiers GTFS...");
 				userCallback('Traitement des fichiers GTFS...', "info");
 				parseGTFS(fileLocation, userCallback, cb);
-			},
-			function (cb) {
-				console.log("Nettoyage du dossier " + downloadDir.grey + "...");
-				//clearDirectory(fileLocation, cb);
-				cb();
 			}
 		],
 		function (err, results) {
@@ -708,12 +677,9 @@ function getGTFSRealtime(url, callback) {
 		if (!error && response.statusCode == 200) {
 			var feed = GtfsRealtimeBindings.FeedMessage.decode(body);
 			feed.entity.forEach(function(entity) {
-				if (entity.trip_update) {
-					console.log(entity.trip_update);
-				}
+
 			});
 			callback("ok");
 		}
 	});
 }
-//getGTFSRealtime('http://googletransit.ridetarc.org/realtime/gtfs-realtime/TrapezeRealTimeFeed.pb', console.log);
