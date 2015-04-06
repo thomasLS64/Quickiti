@@ -1,11 +1,12 @@
 # Quickiti
-Les transports en commun font partis de notre quotidien, il nous sont devenu indispensable.
 
-Mais un problème persiste, la mise à disposition de l’information aux usagers reste basique. Dans un réseau dense, il peut donc être compliqué de trouver le transport en commun, le plus adapté, tous ont différents horaires, prix et itinéraires.
+Les transports en commun font partie de notre quotidien, ils nous sont devenu indispensables.
 
-Quickiti souhaite centraliser les données des différentes compagnies en une seule application pour faciliter la vie des usagers.
+Mais un problème persiste : la mise à disposition de l’information aux usagers reste basique. Dans un réseau dense, il peut donc être compliqué de trouver le transport en commun le plus adapté : tous ont différents horaires, prix et itinéraires.
 
-Quickiti offre ainsi la possibilité grâce à sa carte-web interactive, de suivre en temps réel les différents transports possibles. Itinéraire, recherche de lignes, … .
+Quickiti souhaite centraliser les données des différentes entreprises en une seule application pour faciliter la vie des usagers.
 
-L’application est ouverte à toute compagnie souhaitant mettre leurs informations à disposition de leurs usager.
+Quickiti offre ainsi la possibilité grâce à sa carte-web interactive, de suivre en temps réel les différents transports possibles. Itinéraire, recherche de lignes, …
+
+L’application est ouverte à toute entreprise souhaitant mettre ses informations à disposition de ses usagers.
 
